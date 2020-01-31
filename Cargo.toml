@@ -1,0 +1,12 @@
+[package]
+name = "minictrl"
+version = "0.1.0"
+authors = ["Jacob Jenner Rasmussen <jacob@jener.dk>"]
+edition = "2018"
+
+[dependencies]
+diesel = { version = "1.4.3", features = ["postgres", "network-address"] }
+dotenv = "0.11.0"
+ipnetwork = "0.16.0"
+serde_json = "^1.0.45"
+serde = "^1.0.104"

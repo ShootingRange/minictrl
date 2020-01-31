@@ -1,0 +1,10 @@
+version: '3'
+services:
+  database:
+    image: postgres:12
+    environment:
+      - POSTGRES_PASSWORD=minictrl
+      - POSTGRES_USER=minictrl
+      - POSTGRES_DB=minictrl
+    ports:
+      - "5432:5432"
