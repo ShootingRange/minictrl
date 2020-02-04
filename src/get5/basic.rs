@@ -1,5 +1,5 @@
-use crate::models::Side;
 use std::option::Option;
+use crate::common::Side;
 
 /// Get5 Match schema
 /// https://github.com/splewis/get5#match-schema
@@ -17,7 +17,7 @@ pub struct Match {
     pub favored_percentage_team1: Option<i32>,
     pub favored_percentage_text: Option<String>,
     pub cvars: Option<Vec<String>>,
-    pub spectators: Option<Vec<Spectator>>,
+    pub spectators: Option<Spectators>,
     pub team1: Team,
     pub team2: Team,
     pub match_title: Option<String>,
@@ -25,7 +25,7 @@ pub struct Match {
 
 /// Subset of Get5's Team schema, with only the fields necessary used for identifying a spectator account
 #[derive(Clone)]
-pub struct Spectator {
+pub struct Spectators {
     pub name: String,
     pub players: Vec<Player>,
 }

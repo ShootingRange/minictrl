@@ -3,9 +3,12 @@ extern crate diesel;
 extern crate ipnetwork;
 extern crate serde;
 extern crate serde_json;
+#[macro_use]
+extern crate diesel_derive_enum;
 
+pub mod common;
 pub mod get5;
-pub(crate) mod models;
+pub(crate) mod database;
 
 #[cfg(test)]
 mod tests {

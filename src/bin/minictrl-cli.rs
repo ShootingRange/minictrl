@@ -1,8 +1,6 @@
 extern crate minictrl;
 
 use minictrl::get5::basic::*;
-use minictrl::get5::serializer::*;
-use std::marker::PhantomData;
 use serde_json::Result;
 
 fn main() -> Result<()> {
@@ -26,7 +24,7 @@ fn main() -> Result<()> {
         match_text: None
     };
 
-    let s = Spectator {
+    let s = Spectators {
         name: "Spectator".to_string(),
         players: vec![],
     };
@@ -43,7 +41,7 @@ fn main() -> Result<()> {
         favored_percentage_team1: None,
         favored_percentage_text: None,
         cvars: None,
-        spectators: Some(vec![s]), // TODO should spectators be a vector?
+        spectators: Some(s),
         team1: t1,
         team2: t2,
         match_title: None

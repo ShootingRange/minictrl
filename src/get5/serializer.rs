@@ -1,11 +1,11 @@
 use crate::get5::basic::*;
-use crate::models::Side;
+use crate::common::Side;
 use serde::ser::*;
 use serde::Serialize;
 use serde::Serializer;
 use std::collections::HashMap;
 
-impl Serialize for Spectator {
+impl Serialize for Spectators {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
     where
         S: Serializer,

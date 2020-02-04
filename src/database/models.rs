@@ -1,14 +1,16 @@
 use crate::ipnetwork::IpNetwork;
+use crate::common::Side;
+use crate::database::schema::*;
 
-#[derive(Queryable)]
+#[derive(Identifiable, Queryable)]
 pub struct Team {
     pub id: i32,
     pub name: String,
-    pub countr: [char; 2],
+    pub country: [char; 2],
     pub logo: String,
 }
 
-#[derive(Queryable)]
+#[derive(Identifiable, Queryable)]
 pub struct Player {
     pub id: i32,
     pub team_id: i32,
@@ -17,7 +19,7 @@ pub struct Player {
     pub steamid: String,
 }
 
-#[derive(Queryable)]
+#[derive(Identifiable, Queryable)]
 pub struct Server {
     pub id: i32,
     pub host: IpNetwork,
@@ -25,20 +27,14 @@ pub struct Server {
     pub type_: String,
 }
 
-#[derive(Queryable)]
+#[derive(Identifiable, Queryable)]
 pub struct Spectator {
     pub id: i32,
     pub steamid: String,
 }
 
-#[derive(Clone)]
-pub enum Side {
-    Standard,
-    NeverKnife,
-    AlwaysKnife,
-}
-
-#[derive(Queryable)]
+#[derive(Identifiable, Queryable)]
+#[table_name = "matches"]
 pub struct Match {
     pub id: i32,
     pub server_id: i32,
@@ -52,15 +48,21 @@ pub struct Match {
     pub min_player_to_ready: i32,
 }
 
-#[derive(Queryable)]
+#[derive(Identifiable, Queryable, Associations)]
+#[belongs_to(Match)]
+#[table_name = "maplist"]
 pub struct MapList {
     pub id: i32,
+    pub match_id: i32,
     pub order: i32,
     pub map: String,
 }
 
-#[derive(Queryable)]
+#[derive(Identifiable, Queryable, Associations)]
+#[belongs_to(Match)]
+#[table_name = "match_spectator"]
 pub struct MatchSpectator {
+    pub id: i32,
     pub match_id: i32,
     pub spectator_id: i32,
 }
