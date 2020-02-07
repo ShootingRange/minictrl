@@ -6,8 +6,8 @@ use crate::database::schema::*;
 pub struct Team {
     pub id: i32,
     pub name: String,
-    pub country: [char; 2],
-    pub logo: String,
+    pub country: Option<[char; 2]>,
+    pub logo: Option<String>,
 }
 
 #[derive(Identifiable, Queryable)]
@@ -15,8 +15,8 @@ pub struct Player {
     pub id: i32,
     pub team_id: i32,
     pub name: String,
-    pub tag: String,
-    pub steamid: String,
+    pub tag: Option<String>,
+    pub steamid: Option<String>,
 }
 
 #[derive(Identifiable, Queryable)]
@@ -24,7 +24,7 @@ pub struct Server {
     pub id: i32,
     pub host: IpNetwork,
     pub port: u16,
-    pub type_: String,
+    pub type_: Option<String>,
 }
 
 #[derive(Identifiable, Queryable)]

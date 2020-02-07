@@ -11,7 +11,7 @@ CREATE TABLE players
 (
     id      serial,
     team_id integer not null,
-    name    varchar,
+    name    varchar not null,
     tag     varchar,
     steamid varchar,
     foreign key (team_id) references teams (id),
