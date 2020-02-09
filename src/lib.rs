@@ -9,6 +9,7 @@ extern crate diesel_derive_enum;
 pub mod common;
 pub mod get5;
 pub(crate) mod database;
+pub mod actors;
 
 #[cfg(test)]
 mod tests {

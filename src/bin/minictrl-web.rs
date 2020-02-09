@@ -1,11 +1,39 @@
 extern crate minictrl;
+extern crate dotenv;
 
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use crate::minictrl::get5::basic;
 use minictrl::common::Side;
+use actix::{SyncArbiter, Addr};
+use diesel::{PgConnection, Connection};
+use crate::minictrl::actors::database::*;
+use dotenv::dotenv;
+use std::env;
 
-async fn index() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
+async fn index(data: web::Data<State>) -> impl Responder {
+    let actor_resp = data.db
+        .send(CreateTeam {
+            name: "foo".to_string(),
+            country: None,
+            logo: None
+        })
+        .await;
+
+    match actor_resp {
+        Ok(db_resp) => {
+            match db_resp {
+                Ok(_) => {
+                    HttpResponse::Ok().body("success")
+                },
+                Err(_) => {
+                    HttpResponse::InternalServerError().body("Database error")
+                },
+            }
+        },
+        Err(_) => {
+            HttpResponse::InternalServerError().body("Actor mailbox error")
+        },
+    }
 }
 
 async fn index2() -> impl Responder {
@@ -45,14 +73,33 @@ async fn index2() -> impl Responder {
     //HttpResponse::Ok().body("Hello world again!")
 }
 
+/// This is state where we will store *DbExecutor* address.
+struct State {
+    db: Addr<DbExecutor>,
+}
+
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
+    dotenv().ok();
+
+    let database_url = env::var("DATABASE_URL")
+        .expect("DATABASE_URL must be set");
+
+    // Start 3 parallel db executors
+    let addr = SyncArbiter::start(3, move || {
+        DbExecutor{
+            conn: PgConnection::establish(database_url.as_str()).unwrap()
+        }
+    });
+
+    // Start http server
+    HttpServer::new(move || {
         App::new()
-            .route("/", web::get().to(index))
-            .route("/again", web::get().to(index2))
+            .data(State { db: addr.clone() })
+            .service(web::resource("/").route(web::get().to(index)))
+            .service(web::resource("/again").route(web::get().to(index2)))
     })
-        .bind("127.0.0.1:8088")?
+        .bind("127.0.0.1:8080")?
         .run()
         .await
 }

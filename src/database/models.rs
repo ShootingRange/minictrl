@@ -2,11 +2,13 @@ use crate::ipnetwork::IpNetwork;
 use crate::common::Side;
 use crate::database::schema::*;
 
+pub type CountryCode = String;
+
 #[derive(Identifiable, Queryable)]
 pub struct Team {
     pub id: i32,
     pub name: String,
-    pub country: Option<[char; 2]>,
+    pub country: Option<CountryCode>,
     pub logo: Option<String>,
 }
 
