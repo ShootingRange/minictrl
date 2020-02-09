@@ -4,7 +4,7 @@ use crate::database::schema::*;
 
 pub type CountryCode = String;
 
-#[derive(Identifiable, Queryable)]
+#[derive(Identifiable, Queryable, Serialize)]
 pub struct Team {
     pub id: i32,
     pub name: String,

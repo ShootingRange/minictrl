@@ -9,6 +9,8 @@ use diesel::{PgConnection, Connection};
 use crate::minictrl::actors::database::*;
 use dotenv::dotenv;
 use std::env;
+use serde_json::Error;
+use actix_web::error::PayloadError::Http2Payload;
 
 async fn index(data: web::Data<State>) -> impl Responder {
     let actor_resp = data.db
@@ -73,6 +75,35 @@ async fn index2() -> impl Responder {
     //HttpResponse::Ok().body("Hello world again!")
 }
 
+async fn list_teams(data: web::Data<State>) -> impl Responder {
+    let actor_resp = data.db
+        .send(ListTeams {})
+        .await;
+
+    match actor_resp {
+        Ok(db_resp) => {
+            match db_resp {
+                Ok(teams) => {
+                    match serde_json::to_string(&teams) {
+                        Ok(json) => {
+                            HttpResponse::Ok().body(&json)
+                        },
+                        Err(_) => {
+                            HttpResponse::InternalServerError().body("failed to serialize teams")
+                        },
+                    }
+                },
+                Err(_) => {
+                    HttpResponse::InternalServerError().body("Database error")
+                },
+            }
+        },
+        Err(_) => {
+            HttpResponse::InternalServerError().body("Actor mailbox error")
+        },
+    }
+}
+
 /// This is state where we will store *DbExecutor* address.
 struct State {
     db: Addr<DbExecutor>,
@@ -98,6 +129,7 @@ async fn main() -> std::io::Result<()> {
             .data(State { db: addr.clone() })
             .service(web::resource("/").route(web::get().to(index)))
             .service(web::resource("/again").route(web::get().to(index2)))
+            .service(web::resource("/teams").route(web::get().to(list_teams)))
     })
         .bind("127.0.0.1:8080")?
         .run()
