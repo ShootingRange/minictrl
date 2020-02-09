@@ -9,12 +9,12 @@ use diesel::{PgConnection, Connection};
 use crate::minictrl::actors::database::*;
 use dotenv::dotenv;
 use std::env;
-use serde_json::Error;
-use actix_web::error::PayloadError::Http2Payload;
+use minictrl::database::models::NewTeam;
+use minictrl::web::graphql::*;
 
 async fn index(data: web::Data<State>) -> impl Responder {
     let actor_resp = data.db
-        .send(CreateTeam {
+        .send(NewTeam {
             name: "foo".to_string(),
             country: None,
             logo: None
@@ -123,13 +123,19 @@ async fn main() -> std::io::Result<()> {
         }
     });
 
+    let schema = std::sync::Arc::new(create_schema());
+
     // Start http server
     HttpServer::new(move || {
         App::new()
+            .wrap(actix_web::middleware::Logger::default())
             .data(State { db: addr.clone() })
+            .data(schema.clone())
             .service(web::resource("/").route(web::get().to(index)))
             .service(web::resource("/again").route(web::get().to(index2)))
             .service(web::resource("/teams").route(web::get().to(list_teams)))
+            .service(web::resource("/graphql").route(web::post().to(graphql)))
+            .service(web::resource("/graphiql").route(web::get().to(graphiql)))
     })
         .bind("127.0.0.1:8080")?
         .run()

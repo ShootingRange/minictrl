@@ -6,11 +6,14 @@ extern crate serde;
 extern crate serde_json;
 #[macro_use]
 extern crate diesel_derive_enum;
+#[macro_use]
+extern crate juniper;
 
 pub mod common;
 pub mod get5;
-pub(crate) mod database;
+pub mod database;
 pub mod actors;
+pub mod web;
 
 #[cfg(test)]
 mod tests {
