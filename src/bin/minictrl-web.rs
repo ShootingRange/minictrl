@@ -11,6 +11,7 @@ use dotenv::dotenv;
 use std::env;
 use minictrl::database::models::NewTeam;
 use minictrl::web::graphql::*;
+use actix_cors::Cors;
 
 async fn index(data: web::Data<State>) -> impl Responder {
     let actor_resp = data.db
@@ -129,6 +130,13 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .wrap(actix_web::middleware::Logger::default())
+            .wrap(
+                Cors::new()
+                    .allowed_origin("http://localhost:8080")
+                    .supports_credentials()
+                    .max_age(3600)
+                    .finish()
+            )
             .data(State { db: addr.clone() })
             .data(schema.clone())
             .service(web::resource("/").route(web::get().to(index)))
