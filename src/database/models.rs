@@ -4,7 +4,7 @@ use crate::database::schema::*;
 
 pub type CountryCode = String;
 
-#[derive(Identifiable, Queryable, Serialize, GraphQLObject)]
+#[derive(Identifiable, Queryable, Serialize)]
 pub struct Team {
     pub id: i32,
     pub name: String,
@@ -20,9 +20,18 @@ pub struct NewTeam {
     pub logo: Option<String>,
 }
 
-#[derive(Identifiable, Queryable)]
+#[derive(Identifiable, Queryable, Serialize, GraphQLObject)]
 pub struct Player {
     pub id: i32,
+    pub team_id: i32,
+    pub name: String,
+    pub tag: Option<String>,
+    pub steamid: Option<String>,
+}
+
+#[derive(Insertable, GraphQLInputObject)]
+#[table_name = "players"]
+pub struct NewPlayer {
     pub team_id: i32,
     pub name: String,
     pub tag: Option<String>,

@@ -1,43 +1,16 @@
 extern crate minictrl;
 extern crate dotenv;
 
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{web, App, HttpServer, Responder};
 use crate::minictrl::get5::basic;
 use minictrl::common::Side;
-use actix::{SyncArbiter, Addr};
+use actix::SyncArbiter;
 use diesel::{PgConnection, Connection};
 use crate::minictrl::actors::database::*;
 use dotenv::dotenv;
 use std::env;
-use minictrl::database::models::NewTeam;
 use minictrl::web::graphql::*;
 use actix_cors::Cors;
-
-async fn index(data: web::Data<State>) -> impl Responder {
-    let actor_resp = data.db
-        .send(NewTeam {
-            name: "foo".to_string(),
-            country: None,
-            logo: None
-        })
-        .await;
-
-    match actor_resp {
-        Ok(db_resp) => {
-            match db_resp {
-                Ok(_) => {
-                    HttpResponse::Ok().body("success")
-                },
-                Err(_) => {
-                    HttpResponse::InternalServerError().body("Database error")
-                },
-            }
-        },
-        Err(_) => {
-            HttpResponse::InternalServerError().body("Actor mailbox error")
-        },
-    }
-}
 
 async fn index2() -> impl Responder {
     let m = basic::Match {
@@ -76,40 +49,6 @@ async fn index2() -> impl Responder {
     //HttpResponse::Ok().body("Hello world again!")
 }
 
-async fn list_teams(data: web::Data<State>) -> impl Responder {
-    let actor_resp = data.db
-        .send(ListTeams {})
-        .await;
-
-    match actor_resp {
-        Ok(db_resp) => {
-            match db_resp {
-                Ok(teams) => {
-                    match serde_json::to_string(&teams) {
-                        Ok(json) => {
-                            HttpResponse::Ok().body(&json)
-                        },
-                        Err(_) => {
-                            HttpResponse::InternalServerError().body("failed to serialize teams")
-                        },
-                    }
-                },
-                Err(_) => {
-                    HttpResponse::InternalServerError().body("Database error")
-                },
-            }
-        },
-        Err(_) => {
-            HttpResponse::InternalServerError().body("Actor mailbox error")
-        },
-    }
-}
-
-/// This is state where we will store *DbExecutor* address.
-struct State {
-    db: Addr<DbExecutor>,
-}
-
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
@@ -118,13 +57,11 @@ async fn main() -> std::io::Result<()> {
         .expect("DATABASE_URL must be set");
 
     // Start 3 parallel db executors
-    let addr = SyncArbiter::start(3, move || {
+    let db_addr = SyncArbiter::start(3, move || {
         DbExecutor{
             conn: PgConnection::establish(database_url.as_str()).unwrap()
         }
     });
-
-    let schema = std::sync::Arc::new(create_schema());
 
     // Start http server
     HttpServer::new(move || {
@@ -137,11 +74,11 @@ async fn main() -> std::io::Result<()> {
                     .max_age(3600)
                     .finish()
             )
-            .data(State { db: addr.clone() })
-            .data(schema.clone())
-            .service(web::resource("/").route(web::get().to(index)))
+            .data(db_addr.clone())
+            .data(create_schema())
+            //.service(web::resource("/").route(web::get().to(index)))
             .service(web::resource("/again").route(web::get().to(index2)))
-            .service(web::resource("/teams").route(web::get().to(list_teams)))
+            //.service(web::resource("/teams").route(web::get().to(list_teams)))
             .service(web::resource("/graphql").route(web::post().to(graphql)))
             .service(web::resource("/graphiql").route(web::get().to(graphiql)))
     })
