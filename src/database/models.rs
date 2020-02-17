@@ -23,8 +23,8 @@ pub struct NewTeam {
 #[derive(Identifiable, Queryable, Serialize, GraphQLObject)]
 pub struct Player {
     pub id: i32,
-    pub team_id: i32,
     pub name: String,
+    pub team_id: i32,
     pub tag: Option<String>,
     pub steamid: Option<String>,
 }

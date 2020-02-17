@@ -48,21 +48,43 @@ impl QueryRoot {
         }).await;
 
         match team {
-            Ok(team_result) => {
-                match team_result {
+            Ok(result) => {
+                match result {
                     Ok(team) => FieldResult::Ok(team),
                     Err(err) => FieldResult::Err(FieldError::from(err)),
                 }
+            }
+            Err(err) => {
+                if cfg!(debug_assertions) {
+                    FieldResult::Err(FieldError::from(err))
+                } else {
+                    FieldResult::Err(FieldError::from("Over capacity, try again later"))
+                }
             },
-            Err(err) => FieldResult::Err(FieldError::from(err)),
         }
     }
 
-    /*fn player(id: i32) -> FieldResult<GraphQLPlayer> {
-        Ok(GraphQLPlayer {
+    async fn player(context: &Context, id: i32) -> FieldResult<Player> {
+        let player = context.db.send(crate::actors::database::player::FindPlayerById {
+            id
+        }).await;
 
-        })
-    }*/
+        match player {
+            Ok(result) => {
+                match result {
+                    Ok(team) => FieldResult::Ok(team),
+                    Err(err) => FieldResult::Err(FieldError::from(err)),
+                }
+            }
+            Err(err) => {
+                if cfg!(debug_assertions) {
+                    FieldResult::Err(FieldError::from(err))
+                } else {
+                    FieldResult::Err(FieldError::from("Over capacity, try again later"))
+                }
+            },
+        }
+    }
 }
 
 pub struct MutationRoot;
@@ -72,60 +94,27 @@ pub struct MutationRoot;
 )]
 impl MutationRoot {
     fn createTeam(team: NewTeam, players: Option<Vec<NewPlayer>>) -> FieldResult<Team> {
-        Ok(Team {
-            id: 0,
-            name: "".to_string(),
-            country: None,
-            logo: None
-        })
+        unimplemented!()
     }
 
     fn updateTeam(id: i32, team: NewTeam) -> FieldResult<Team> {
-        Ok(Team {
-            id: 0,
-            name: "".to_string(),
-            country: None,
-            logo: None
-        })
+        unimplemented!()
     }
 
     fn deleteTeam(id: i32) -> FieldResult<Team> {
-        Ok(Team {
-            id: 0,
-            name: "".to_string(),
-            country: None,
-            logo: None
-        })
+        unimplemented!()
     }
 
     fn addPlayer(new_team: NewPlayer) -> FieldResult<Player> {
-        Ok(Player {
-            id: 0,
-            team_id: 0,
-            name: "".to_string(),
-            tag: None,
-            steamid: None
-        })
+        unimplemented!()
     }
 
     fn removePlayer(id: i32) -> FieldResult<Player> {
-        Ok(Player {
-            id: 0,
-            team_id: 0,
-            name: "".to_string(),
-            tag: None,
-            steamid: None
-        })
+        unimplemented!()
     }
 
     fn updatePlayer(id: i32, player: NewPlayer) -> FieldResult<Player> {
-        Ok(Player {
-            id: 0,
-            team_id: 0,
-            name: "".to_string(),
-            tag: None,
-            steamid: None
-        })
+        unimplemented!()
     }
 }
 

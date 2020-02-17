@@ -37,8 +37,8 @@ table! {
 table! {
     players (id) {
         id -> Int4,
+        name -> Varchar,
         team_id -> Int4,
-        name -> Nullable<Varchar>,
         tag -> Nullable<Varchar>,
         steamid -> Nullable<Varchar>,
     }
