@@ -63,6 +63,8 @@ async fn main() -> std::io::Result<()> {
         }
     });
 
+    println!("http://localhost:8080/graphiql");
+
     // Start http server
     HttpServer::new(move || {
         App::new()

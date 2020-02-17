@@ -1,5 +1,8 @@
 use actix::prelude::*;
 use diesel::PgConnection;
+use std::fmt::Display;
+use serde::export::Formatter;
+use serde::export::fmt::Error;
 
 pub struct DbExecutor {
     pub conn: PgConnection,
@@ -9,6 +12,18 @@ impl Actor for DbExecutor {
     type Context = SyncContext<Self>;
 }
 
+#[derive(Debug)]
+pub enum DbActorError {
+    DatabaseError(diesel::result::Error)
+}
+
+impl Display for DbActorError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        match self {
+            DbActorError::DatabaseError(err) => err.fmt(f),
+        }
+    }
+}
 
 pub mod player {
     use actix::Message;
@@ -24,7 +39,7 @@ pub mod player {
     }
 
     pub struct FindPlayerById {
-        id: i32
+        pub id: i32
     }
 
     impl Message for FindPlayerById {
@@ -40,7 +55,7 @@ pub mod player {
     }
 
     pub struct DeletePlayerById {
-        id: i32,
+        pub id: i32,
     }
 
     impl Message for DeletePlayerById {
@@ -48,7 +63,7 @@ pub mod player {
     }
 
     pub struct FindPlayersByTeamId {
-        team_id: i32,
+        pub team_id: i32,
     }
 
     impl Message for FindPlayersByTeamId {
@@ -62,6 +77,7 @@ pub mod team {
     use crate::database::models::Team;
     use super::DbExecutor;
     use diesel::prelude::*;
+    use crate::actors::database::DbActorError;
 
     pub struct CreateTeam {
         // TODO
@@ -72,22 +88,22 @@ pub mod team {
     }
 
     pub struct FindTeamById {
-        id: i32,
+        pub id: i32,
     }
 
     impl Message for FindTeamById {
-        type Result = Result<Team, Box<dyn Error>>;
+        type Result = Result<Team, DbActorError>;
     }
 
     impl Handler<FindTeamById> for DbExecutor {
-        type Result = Result<Team, Box<dyn Error>>;
+        type Result = Result<Team, DbActorError>;
 
         fn handle(&mut self, msg: FindTeamById, ctx: &mut Self::Context) -> Self::Result {
             use crate::database::schema::teams::dsl::*;
 
             match teams.filter(id.eq(msg.id)).first::<Team>(&self.conn) {
                 Ok(t) => Ok(t),
-                Err(err) => Err(Box::new(err)),
+                Err(err) => Err(DbActorError::DatabaseError(err)) //Err(Box::new(err)),
             }
         }
     }
@@ -101,7 +117,7 @@ pub mod team {
     }
 
     pub struct DeleteTeamById {
-        id: i32,
+        pub id: i32,
     }
 
     impl Message for DeleteTeamById {

@@ -1,12 +1,11 @@
-use juniper::FieldResult;
+use juniper::{FieldResult, FieldError};
 use juniper::RootNode;
 use crate::database::models::{Team, NewTeam, Player, NewPlayer};
 use juniper::http::graphiql::graphiql_source;
 use actix_web::{HttpResponse, web};
 use juniper::http::GraphQLRequest;
-use actix::{Addr, MailboxError};
+use actix::Addr;
 use crate::actors::database::DbExecutor;
-use std::error::Error;
 
 pub struct Context {
     db: Addr<DbExecutor>
@@ -16,7 +15,7 @@ impl juniper::Context for Context {}
 
 pub struct QueryRoot;
 
-#[juniper::object]
+#[juniper::graphql_object]
 impl Team {
     fn id(&self) -> i32 {
         self.id
@@ -39,7 +38,7 @@ impl Team {
     }
 }
 
-#[juniper::object(
+#[juniper::graphql_object(
     Context = Context,
 )]
 impl QueryRoot {
@@ -51,11 +50,11 @@ impl QueryRoot {
         match team {
             Ok(team_result) => {
                 match team_result {
-                    Ok(team) => Result::ok(team),
-                    Err(err) => FieldResult::err(err),
+                    Ok(team) => FieldResult::Ok(team),
+                    Err(err) => FieldResult::Err(FieldError::from(err)),
                 }
             },
-            Err(err) => FieldResult::err(err),
+            Err(err) => FieldResult::Err(FieldError::from(err)),
         }
     }
 
@@ -68,7 +67,7 @@ impl QueryRoot {
 
 pub struct MutationRoot;
 
-#[juniper::object(
+#[juniper::graphql_object(
     Context = Context,
 )]
 impl MutationRoot {
@@ -147,14 +146,17 @@ pub async fn graphql(
     data: web::Json<GraphQLRequest>,
     db: web::Data<Addr<DbExecutor>>
 ) -> Result<HttpResponse, actix_web::Error> {
-    let user = web::block(move || {
-        let res = data.execute_async::<Context, QueryRoot, MutationRoot>(&st, &Context{
-            db: db.get_ref().clone(),
-        });
-        Ok::<_, serde_json::error::Error>(serde_json::to_string(&res)?)
-    })
-        .await?;
-    Ok(HttpResponse::Ok()
-        .content_type("application/json")
-        .body(user))
+    let context = Context{
+        db: db.get_ref().clone(),
+    };
+    let res = data.execute_async::<Context, QueryRoot, MutationRoot>(&st, &context).await;
+    let user = serde_json::to_string(&res);
+    match user {
+        Ok(json) => {
+            Ok(HttpResponse::Ok()
+                .content_type("application/json")
+                .body(json))
+        },
+        Err(err) => std::result::Result::Err(actix_web::Error::from(err)),
+    }
 }
