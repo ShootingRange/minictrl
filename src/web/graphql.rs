@@ -1,11 +1,11 @@
-use juniper::{FieldResult, FieldError, ScalarValue};
+use juniper::{FieldResult, FieldError};
 use juniper::RootNode;
-use crate::database::models::{Team, NewTeam, Player, NewPlayer};
+use crate::database::models::{Team, Player};
 use juniper::http::graphiql::graphiql_source;
 use actix_web::{HttpResponse, web};
 use juniper::http::GraphQLRequest;
 use actix::Addr;
-use crate::actors::database::DbExecutor;
+use crate::actors::database::*;
 
 pub struct Context {
     db: Addr<DbExecutor>
@@ -36,7 +36,7 @@ impl Team {
     }
 
     async fn players(&self, context: &Context) -> FieldResult<Vec<Player>> {
-        let players = context.db.send(crate::actors::database::player::FindPlayersByTeamId {
+        let players = context.db.send(player::FindPlayersByTeamId {
             team_id: self.id
         }).await;
 
@@ -53,11 +53,52 @@ impl Team {
 }
 
 #[juniper::graphql_object(
+    Context = Context
+)]
+impl Player {
+    fn id(&self) -> i32 {
+        self.id
+    }
+
+    fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    fn team_id(&self) -> i32 {
+        self.team_id
+    }
+
+    fn tag(&self) -> Option<String> {
+        self.tag.clone()
+    }
+
+    fn steamid(&self) -> Option<String> {
+        self.steamid.clone()
+    }
+
+    async fn team(&self, context: &Context) -> FieldResult<Team> {
+        let team = context.db.send(team::FindTeamById {
+            id: self.team_id
+        }).await;
+
+        match team {
+            Ok(result) => {
+                match result {
+                    Ok(t) => FieldResult::Ok(t),
+                    Err(err) => FieldResult::Err(FieldError::from(err)),
+                }
+            }
+            Err(err) => FieldResult::Err(FieldError::from(err)),
+        }
+    }
+}
+
+#[juniper::graphql_object(
     Context = Context,
 )]
 impl QueryRoot {
     async fn team(context: &Context, id: i32) -> FieldResult<Team> {
-        let team = context.db.send(crate::actors::database::team::FindTeamById {
+        let team = context.db.send(team::FindTeamById {
             id
         }).await;
 
@@ -79,7 +120,7 @@ impl QueryRoot {
     }
 
     async fn player(context: &Context, id: i32) -> FieldResult<Player> {
-        let player = context.db.send(crate::actors::database::player::FindPlayerById {
+        let player = context.db.send(player::FindPlayerById {
             id
         }).await;
 

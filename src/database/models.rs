@@ -20,7 +20,7 @@ pub struct NewTeam {
     pub logo: Option<String>,
 }
 
-#[derive(Identifiable, Queryable, Serialize, GraphQLObject)]
+#[derive(Identifiable, Queryable, Serialize)]
 pub struct Player {
     pub id: i32,
     pub name: String,

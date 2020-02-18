@@ -26,7 +26,7 @@ impl Display for DbActorError {
 }
 
 pub mod player {
-    use actix::{Message, Handler, Actor};
+    use actix::{Message, Handler};
     use std::error::Error;
     use crate::database::models::Player;
     use crate::actors::database::{DbExecutor, DbActorError};
