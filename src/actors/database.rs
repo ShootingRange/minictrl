@@ -26,7 +26,7 @@ impl Display for DbActorError {
 }
 
 pub mod player {
-    use actix::{Message, Handler};
+    use actix::{Message, Handler, Actor};
     use std::error::Error;
     use crate::database::models::Player;
     use crate::actors::database::{DbExecutor, DbActorError};
@@ -82,7 +82,20 @@ pub mod player {
     }
 
     impl Message for FindPlayersByTeamId {
-        type Result = Result<Vec<Player>, Box<dyn Error>>;
+        type Result = Result<Vec<Player>, DbActorError>;
+    }
+
+    impl Handler<FindPlayersByTeamId> for DbExecutor {
+        type Result = Result<Vec<Player>, DbActorError>;
+
+        fn handle(&mut self, msg: FindPlayersByTeamId, ctx: &mut Self::Context) -> Self::Result {
+            use crate::database::schema::players::dsl::*;
+
+            match players.filter(team_id.eq(msg.team_id)).load::<Player>(&self.conn) {
+                Ok(ps) => Ok(ps),
+                Err(err) => Err(DbActorError::DatabaseError(err)),
+            }
+        }
     }
 }
 

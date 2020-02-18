@@ -1,4 +1,4 @@
-use juniper::{FieldResult, FieldError};
+use juniper::{FieldResult, FieldError, ScalarValue};
 use juniper::RootNode;
 use crate::database::models::{Team, NewTeam, Player, NewPlayer};
 use juniper::http::graphiql::graphiql_source;
@@ -15,7 +15,9 @@ impl juniper::Context for Context {}
 
 pub struct QueryRoot;
 
-#[juniper::graphql_object]
+#[juniper::graphql_object(
+    Context = Context
+)]
 impl Team {
     fn id(&self) -> i32 {
         self.id
@@ -33,8 +35,20 @@ impl Team {
         self.logo.clone()
     }
 
-    fn players(&self) -> Vec<Player> {
-        vec![]
+    async fn players(&self, context: &Context) -> FieldResult<Vec<Player>> {
+        let players = context.db.send(crate::actors::database::player::FindPlayersByTeamId {
+            team_id: self.id
+        }).await;
+
+        match players {
+            Ok(result) => {
+                match result {
+                    Ok(ps) => FieldResult::Ok(ps),
+                    Err(err) => FieldResult::Err(FieldError::from(err)),
+                }
+            }
+            Err(err) => FieldResult::Err(FieldError::from(err)),
+        }
     }
 }
 
@@ -93,6 +107,7 @@ pub struct MutationRoot;
     Context = Context,
 )]
 impl MutationRoot {
+    /*
     fn createTeam(team: NewTeam, players: Option<Vec<NewPlayer>>) -> FieldResult<Team> {
         unimplemented!()
     }
@@ -116,6 +131,7 @@ impl MutationRoot {
     fn updatePlayer(id: i32, player: NewPlayer) -> FieldResult<Player> {
         unimplemented!()
     }
+    */
 }
 
 pub type Schema = RootNode<'static, QueryRoot, MutationRoot>;

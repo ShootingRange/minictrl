@@ -15,5 +15,5 @@ actix = "0.9.0"
 actix-web = "2.0"
 actix-rt = "1.0"
 actix-cors = "0.2.0"
-juniper = { git = "https://github.com/graphql-rust/juniper", features = ["async"] }
+juniper = { git = "https://github.com/graphql-rust/juniper", rev = "547cf3e36fa0532476295186b86954fab3a258f6", features = ["async"] }
 futures = "0.3"
