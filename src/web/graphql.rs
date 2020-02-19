@@ -59,15 +59,7 @@ impl Team {
             team_id: self.id
         }).await;
 
-        match players {
-            Ok(result) => {
-                match result {
-                    Ok(ps) => FieldResult::Ok(ps),
-                    Err(err) => FieldResult::Err(FieldError::from(err)),
-                }
-            }
-            Err(err) => FieldResult::Err(FieldError::from(err)),
-        }
+        unpack_dbexecutor(players)
     }
 }
 
@@ -100,15 +92,7 @@ impl Player {
             id: self.team_id
         }).await;
 
-        match team {
-            Ok(result) => {
-                match result {
-                    Ok(t) => FieldResult::Ok(t),
-                    Err(err) => FieldResult::Err(FieldError::from(err)),
-                }
-            }
-            Err(err) => FieldResult::Err(FieldError::from(err)),
-        }
+        unpack_dbexecutor(team)
     }
 }
 
@@ -121,21 +105,7 @@ impl QueryRoot {
             id
         }).await;
 
-        match team {
-            Ok(result) => {
-                match result {
-                    Ok(team) => FieldResult::Ok(team),
-                    Err(err) => FieldResult::Err(FieldError::from(err)),
-                }
-            }
-            Err(err) => {
-                if cfg!(debug_assertions) {
-                    FieldResult::Err(FieldError::from(err))
-                } else {
-                    FieldResult::Err(FieldError::from("Over capacity, try again later"))
-                }
-            },
-        }
+        unpack_dbexecutor(team)
     }
 
     async fn player(context: &Context, id: i32) -> FieldResult<Player> {
@@ -143,21 +113,7 @@ impl QueryRoot {
             id
         }).await;
 
-        match player {
-            Ok(result) => {
-                match result {
-                    Ok(team) => FieldResult::Ok(team),
-                    Err(err) => FieldResult::Err(FieldError::from(err)),
-                }
-            }
-            Err(err) => {
-                if cfg!(debug_assertions) {
-                    FieldResult::Err(FieldError::from(err))
-                } else {
-                    FieldResult::Err(FieldError::from("Over capacity, try again later"))
-                }
-            },
-        }
+        unpack_dbexecutor(player)
     }
 }
 

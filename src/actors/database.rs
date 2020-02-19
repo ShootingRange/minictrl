@@ -51,7 +51,7 @@ pub mod player {
     impl Handler<FindPlayerById> for DbExecutor {
         type Result = Result<Player, DbActorError>;
 
-        fn handle(&mut self, msg: FindPlayerById, ctx: &mut Self::Context) -> Self::Result {
+        fn handle(&mut self, msg: FindPlayerById, _ctx: &mut Self::Context) -> Self::Result {
             use crate::database::schema::players::dsl::*;
 
             match players.filter(id.eq(msg.id)).first::<Player>(&self.conn) {
@@ -88,7 +88,7 @@ pub mod player {
     impl Handler<FindPlayersByTeamId> for DbExecutor {
         type Result = Result<Vec<Player>, DbActorError>;
 
-        fn handle(&mut self, msg: FindPlayersByTeamId, ctx: &mut Self::Context) -> Self::Result {
+        fn handle(&mut self, msg: FindPlayersByTeamId, _ctx: &mut Self::Context) -> Self::Result {
             use crate::database::schema::players::dsl::*;
 
             match players.filter(team_id.eq(msg.team_id)).load::<Player>(&self.conn) {
@@ -147,7 +147,7 @@ pub mod team {
     impl Handler<FindTeamById> for DbExecutor {
         type Result = Result<Team, DbActorError>;
 
-        fn handle(&mut self, msg: FindTeamById, ctx: &mut Self::Context) -> Self::Result {
+        fn handle(&mut self, msg: FindTeamById, _ctx: &mut Self::Context) -> Self::Result {
             use crate::database::schema::teams::dsl::*;
 
             match teams.filter(id.eq(msg.id)).first::<Team>(&self.conn) {
