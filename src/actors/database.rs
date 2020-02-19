@@ -102,17 +102,38 @@ pub mod player {
 pub mod team {
     use actix::{Message, Handler};
     use std::error::Error;
-    use crate::database::models::Team;
+    use crate::database::models::{Team, CountryCode, NewTeam};
     use super::DbExecutor;
     use diesel::prelude::*;
     use crate::actors::database::DbActorError;
 
     pub struct CreateTeam {
-        // TODO
+        pub name: String,
+        pub country: Option<CountryCode>,
+        pub logo: Option<String>,
     }
 
     impl Message for CreateTeam {
-        type Result = Result<Team, Box<dyn Error>>;
+        type Result = Result<Team, DbActorError>;
+    }
+
+    impl Handler<CreateTeam> for DbExecutor {
+        type Result = Result<Team, DbActorError>;
+
+        fn handle(&mut self, msg: CreateTeam, _ctx: &mut Self::Context) -> Self::Result {
+            use crate::database::schema::teams::dsl::*;
+
+            let team = NewTeam {
+                name: msg.name,
+                country: msg.country,
+                logo: msg.logo,
+            };
+
+            diesel::insert_into(teams)
+                .values(&team)
+                .get_result::<Team>(&self.conn)
+                .map_err(|err| DbActorError::DatabaseError(err))
+        }
     }
 
     pub struct FindTeamById {

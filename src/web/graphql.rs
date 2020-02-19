@@ -1,14 +1,33 @@
 use juniper::{FieldResult, FieldError};
 use juniper::RootNode;
-use crate::database::models::{Team, Player};
+use crate::database::models::{Team, Player, CountryCode};
 use juniper::http::graphiql::graphiql_source;
 use actix_web::{HttpResponse, web};
 use juniper::http::GraphQLRequest;
-use actix::Addr;
+use actix::{Addr, MailboxError};
 use crate::actors::database::*;
+use crate::actors::database::team::CreateTeam;
 
 pub struct Context {
     db: Addr<DbExecutor>
+}
+
+fn unpack_dbexecutor<T>(resp: Result<Result<T, DbActorError>, MailboxError>) -> FieldResult<T> {
+    match resp {
+        Ok(result) => {
+            match result {
+                Ok(item) => FieldResult::Ok(item),
+                Err(err) => FieldResult::Err(FieldError::from(err)),
+            }
+        }
+        Err(err) => {
+            if cfg!(debug_assertions) {
+                FieldResult::Err(FieldError::from(err))
+            } else {
+                FieldResult::Err(FieldError::from("Over capacity, try again later"))
+            }
+        },
+    }
 }
 
 impl juniper::Context for Context {}
@@ -148,11 +167,17 @@ pub struct MutationRoot;
     Context = Context,
 )]
 impl MutationRoot {
-    /*
-    fn createTeam(team: NewTeam, players: Option<Vec<NewPlayer>>) -> FieldResult<Team> {
-        unimplemented!()
+    async fn createTeam(name: String, country: Option<CountryCode>, logo: Option<String>, context: &Context) -> FieldResult<Team> {
+        let team = context.db.send(CreateTeam{
+            name,
+            country,
+            logo,
+        }).await;
+
+        unpack_dbexecutor(team)
     }
 
+    /*
     fn updateTeam(id: i32, team: NewTeam) -> FieldResult<Team> {
         unimplemented!()
     }
