@@ -6,7 +6,7 @@ use actix_web::{HttpResponse, web};
 use juniper::http::GraphQLRequest;
 use actix::{Addr, MailboxError};
 use crate::actors::database::*;
-use crate::actors::database::team::CreateTeam;
+use crate::actors::database::team::{CreateTeam, DeleteTeamById};
 
 pub struct Context {
     db: Addr<DbExecutor>
@@ -137,11 +137,16 @@ impl MutationRoot {
     fn updateTeam(id: i32, team: NewTeam) -> FieldResult<Team> {
         unimplemented!()
     }
+    */
 
-    fn deleteTeam(id: i32) -> FieldResult<Team> {
-        unimplemented!()
+    async fn deleteTeam(id: i32, context: &Context) -> FieldResult<bool> {
+        let result = context.db.send(DeleteTeamById{ id })
+            .await;
+
+        unpack_dbexecutor(result)
     }
 
+    /*
     fn addPlayer(new_team: NewPlayer) -> FieldResult<Player> {
         unimplemented!()
     }

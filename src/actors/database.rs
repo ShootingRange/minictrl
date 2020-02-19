@@ -170,7 +170,20 @@ pub mod team {
     }
 
     impl Message for DeleteTeamById {
-        type Result = Result<(), Box<dyn Error>>;
+        type Result = Result<bool, DbActorError>;
+    }
+
+    impl Handler<DeleteTeamById> for DbExecutor {
+        type Result = Result<bool, DbActorError>;
+
+        fn handle(&mut self, msg: DeleteTeamById, _ctx: &mut Self::Context) -> Self::Result {
+            use crate::database::schema::teams::dsl::*;
+
+            diesel::delete(teams.filter(id.eq(msg.id)))
+                .execute(&self.conn)
+                .map_err(|err| DbActorError::DatabaseError(err))
+                .map(|size| size > 0)
+        }
     }
 
     pub struct GetTeams {}
