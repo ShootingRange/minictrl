@@ -9,10 +9,10 @@ extern crate diesel_derive_enum;
 #[macro_use]
 extern crate juniper;
 
-pub mod common;
-pub mod get5;
-pub mod database;
 pub mod actors;
+pub mod common;
+pub mod database;
+pub mod get5;
 pub mod web;
 
 #[cfg(test)]

@@ -1,5 +1,5 @@
-use crate::get5::basic::*;
 use crate::common::Side;
+use crate::get5::basic::*;
 use serde::ser::*;
 use serde::Serialize;
 use serde::Serializer;
@@ -14,7 +14,8 @@ impl Serialize for Spectators {
 
         map.serialize_entry("name", &self.name)?;
 
-        let player_map: HashMap<String, String> = self.players
+        let player_map: HashMap<String, String> = self
+            .players
             .iter()
             .map(|player| {
                 let name: String = match &player.name {
@@ -51,7 +52,8 @@ impl Serialize for Team {
             map.serialize_entry("logo", logo)?;
         }
 
-        let player_map: HashMap<String, String> = self.players
+        let player_map: HashMap<String, String> = self
+            .players
             .iter()
             .map(|player| {
                 let name: String = match &player.name {

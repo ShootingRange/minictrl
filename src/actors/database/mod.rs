@@ -1,10 +1,11 @@
 use actix::prelude::*;
 use diesel::PgConnection;
-use std::fmt::Display;
-use serde::export::Formatter;
 use serde::export::fmt::Error;
+use serde::export::Formatter;
+use std::fmt::Display;
 
 pub mod player;
+pub mod server;
 pub mod team;
 
 pub struct DbExecutor {
@@ -17,7 +18,7 @@ impl Actor for DbExecutor {
 
 #[derive(Debug)]
 pub enum DbActorError {
-    DatabaseError(diesel::result::Error)
+    DatabaseError(diesel::result::Error),
 }
 
 impl Display for DbActorError {

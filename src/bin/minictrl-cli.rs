@@ -11,7 +11,7 @@ fn main() -> Result<()> {
         logo: None,
         players: vec![],
         series_score: None,
-        match_text: None
+        match_text: None,
     };
 
     let t2 = Team {
@@ -21,7 +21,7 @@ fn main() -> Result<()> {
         logo: None,
         players: vec![],
         series_score: None,
-        match_text: None
+        match_text: None,
     };
 
     let s = Spectators {
@@ -44,7 +44,7 @@ fn main() -> Result<()> {
         spectators: Some(s),
         team1: t1,
         team2: t2,
-        match_title: None
+        match_title: None,
     };
 
     let j = serde_json::to_string(&m)?;

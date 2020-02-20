@@ -1,33 +1,32 @@
-use juniper::{FieldResult, FieldError};
-use juniper::RootNode;
-use crate::database::models::{Team, Player, CountryCode};
-use juniper::http::graphiql::graphiql_source;
-use actix_web::{HttpResponse, web};
-use juniper::http::GraphQLRequest;
-use actix::{Addr, MailboxError};
-use crate::actors::database::*;
-use crate::actors::database::team::{CreateTeam, DeleteTeamById};
 use crate::actors::database::player::{CreatePlayer, DeletePlayerById};
+use crate::actors::database::server::CreateServer;
+use crate::actors::database::team::{CreateTeam, DeleteTeamById};
+use crate::actors::database::*;
+use crate::database::models::{CountryCode, Player, Server, Team};
+use actix::{Addr, MailboxError};
+use actix_web::{web, HttpResponse};
+use juniper::http::graphiql::graphiql_source;
+use juniper::http::GraphQLRequest;
+use juniper::RootNode;
+use juniper::{FieldError, FieldResult};
 
 pub struct Context {
-    db: Addr<DbExecutor>
+    db: Addr<DbExecutor>,
 }
 
 fn unpack_dbexecutor<T>(resp: Result<Result<T, DbActorError>, MailboxError>) -> FieldResult<T> {
     match resp {
-        Ok(result) => {
-            match result {
-                Ok(item) => FieldResult::Ok(item),
-                Err(err) => FieldResult::Err(FieldError::from(err)),
-            }
-        }
+        Ok(result) => match result {
+            Ok(item) => FieldResult::Ok(item),
+            Err(err) => FieldResult::Err(FieldError::from(err)),
+        },
         Err(err) => {
             if cfg!(debug_assertions) {
                 FieldResult::Err(FieldError::from(err))
             } else {
                 FieldResult::Err(FieldError::from("Over capacity, try again later"))
             }
-        },
+        }
     }
 }
 
@@ -36,7 +35,7 @@ impl juniper::Context for Context {}
 pub struct QueryRoot;
 
 #[juniper::graphql_object(
-    Context = Context
+Context = Context
 )]
 impl Team {
     fn id(&self) -> i32 {
@@ -56,16 +55,17 @@ impl Team {
     }
 
     async fn players(&self, context: &Context) -> FieldResult<Vec<Player>> {
-        let players = context.db.send(player::FindPlayersByTeamId {
-            team_id: self.id
-        }).await;
+        let players = context
+            .db
+            .send(player::FindPlayersByTeamId { team_id: self.id })
+            .await;
 
         unpack_dbexecutor(players)
     }
 }
 
 #[juniper::graphql_object(
-    Context = Context
+Context = Context
 )]
 impl Player {
     fn id(&self) -> i32 {
@@ -89,22 +89,21 @@ impl Player {
     }
 
     async fn team(&self, context: &Context) -> FieldResult<Team> {
-        let team = context.db.send(team::FindTeamById {
-            id: self.team_id
-        }).await;
+        let team = context
+            .db
+            .send(team::FindTeamById { id: self.team_id })
+            .await;
 
         unpack_dbexecutor(team)
     }
 }
 
 #[juniper::graphql_object(
-    Context = Context,
+Context = Context,
 )]
 impl QueryRoot {
     async fn team(context: &Context, id: i32) -> FieldResult<Team> {
-        let team = context.db.send(team::FindTeamById {
-            id
-        }).await;
+        let team = context.db.send(team::FindTeamById { id }).await;
 
         unpack_dbexecutor(team)
     }
@@ -116,9 +115,7 @@ impl QueryRoot {
     }
 
     async fn player(context: &Context, id: i32) -> FieldResult<Player> {
-        let player = context.db.send(player::FindPlayerById {
-            id
-        }).await;
+        let player = context.db.send(player::FindPlayerById { id }).await;
 
         unpack_dbexecutor(player)
     }
@@ -127,15 +124,23 @@ impl QueryRoot {
 pub struct MutationRoot;
 
 #[juniper::graphql_object(
-    Context = Context,
+Context = Context,
 )]
 impl MutationRoot {
-    async fn createTeam(name: String, country: Option<CountryCode>, logo: Option<String>, context: &Context) -> FieldResult<Team> {
-        let team = context.db.send(CreateTeam{
-            name,
-            country,
-            logo,
-        }).await;
+    async fn createTeam(
+        name: String,
+        country: Option<CountryCode>,
+        logo: Option<String>,
+        context: &Context,
+    ) -> FieldResult<Team> {
+        let team = context
+            .db
+            .send(CreateTeam {
+                name,
+                country,
+                logo,
+            })
+            .await;
 
         unpack_dbexecutor(team)
     }
@@ -147,27 +152,33 @@ impl MutationRoot {
     */
 
     async fn deleteTeam(id: i32, context: &Context) -> FieldResult<bool> {
-        let result = context.db.send(DeleteTeamById{ id })
-            .await;
+        let result = context.db.send(DeleteTeamById { id }).await;
 
         unpack_dbexecutor(result)
     }
 
-    async fn createPlayer(team_id: i32, name: String, tag: Option<String>, steamid: Option<String>, context: &Context) -> FieldResult<Player> {
-        let result = context.db.send(CreatePlayer{
-            team_id,
-            name,
-            tag,
-            steamid,
-        })
+    async fn createPlayer(
+        team_id: i32,
+        name: String,
+        tag: Option<String>,
+        steamid: Option<String>,
+        context: &Context,
+    ) -> FieldResult<Player> {
+        let result = context
+            .db
+            .send(CreatePlayer {
+                team_id,
+                name,
+                tag,
+                steamid,
+            })
             .await;
 
         unpack_dbexecutor(result)
     }
 
     async fn deletePlayer(id: i32, context: &Context) -> FieldResult<bool> {
-        let result = context.db.send(DeletePlayerById{ id })
-            .await;
+        let result = context.db.send(DeletePlayerById { id }).await;
 
         unpack_dbexecutor(result)
     }
@@ -195,19 +206,19 @@ pub async fn graphiql() -> HttpResponse {
 pub async fn graphql(
     st: web::Data<Schema>,
     data: web::Json<GraphQLRequest>,
-    db: web::Data<Addr<DbExecutor>>
+    db: web::Data<Addr<DbExecutor>>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let context = Context{
+    let context = Context {
         db: db.get_ref().clone(),
     };
-    let res = data.execute_async::<Context, QueryRoot, MutationRoot>(&st, &context).await;
+    let res = data
+        .execute_async::<Context, QueryRoot, MutationRoot>(&st, &context)
+        .await;
     let user = serde_json::to_string(&res);
     match user {
-        Ok(json) => {
-            Ok(HttpResponse::Ok()
-                .content_type("application/json")
-                .body(json))
-        },
+        Ok(json) => Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(json)),
         Err(err) => std::result::Result::Err(actix_web::Error::from(err)),
     }
 }

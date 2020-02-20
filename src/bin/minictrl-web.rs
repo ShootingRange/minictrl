@@ -1,16 +1,16 @@
-extern crate minictrl;
 extern crate dotenv;
+extern crate minictrl;
 
-use actix_web::{web, App, HttpServer, Responder};
-use crate::minictrl::get5::basic;
-use minictrl::common::Side;
-use actix::SyncArbiter;
-use diesel::{PgConnection, Connection};
 use crate::minictrl::actors::database::*;
-use dotenv::dotenv;
-use std::env;
-use minictrl::web::graphql::*;
+use crate::minictrl::get5::basic;
+use actix::SyncArbiter;
 use actix_cors::Cors;
+use actix_web::{web, App, HttpServer, Responder};
+use diesel::{Connection, PgConnection};
+use dotenv::dotenv;
+use minictrl::common::Side;
+use minictrl::web::graphql::*;
+use std::env;
 
 async fn index2() -> impl Responder {
     let m = basic::Match {
@@ -32,7 +32,7 @@ async fn index2() -> impl Responder {
             logo: None,
             players: vec![],
             series_score: None,
-            match_text: None
+            match_text: None,
         },
         team2: basic::Team {
             name: "".to_string(),
@@ -41,9 +41,9 @@ async fn index2() -> impl Responder {
             logo: None,
             players: vec![],
             series_score: None,
-            match_text: None
+            match_text: None,
         },
-        match_title: None
+        match_title: None,
     };
     web::Json(m)
     //HttpResponse::Ok().body("Hello world again!")
@@ -53,14 +53,11 @@ async fn index2() -> impl Responder {
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
 
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     // Start 3 parallel db executors
-    let db_addr = SyncArbiter::start(3, move || {
-        DbExecutor{
-            conn: PgConnection::establish(database_url.as_str()).unwrap()
-        }
+    let db_addr = SyncArbiter::start(3, move || DbExecutor {
+        conn: PgConnection::establish(database_url.as_str()).unwrap(),
     });
 
     println!("http://localhost:8080/graphiql");
@@ -74,7 +71,7 @@ async fn main() -> std::io::Result<()> {
                     .allowed_origin("http://localhost:8080")
                     .supports_credentials()
                     .max_age(3600)
-                    .finish()
+                    .finish(),
             )
             .data(db_addr.clone())
             .data(create_schema())
@@ -84,7 +81,7 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/graphql").route(web::post().to(graphql)))
             .service(web::resource("/graphiql").route(web::get().to(graphiql)))
     })
-        .bind("127.0.0.1:8080")?
-        .run()
-        .await
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }

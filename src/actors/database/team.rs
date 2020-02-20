@@ -1,8 +1,8 @@
-use actix::{Message, Handler};
-use crate::database::models::{Team, CountryCode, NewTeam};
 use super::DbExecutor;
-use diesel::prelude::*;
 use crate::actors::database::DbActorError;
+use crate::database::models::{CountryCode, NewTeam, Team};
+use actix::{Handler, Message};
+use diesel::prelude::*;
 
 pub struct CreateTeam {
     pub name: String,

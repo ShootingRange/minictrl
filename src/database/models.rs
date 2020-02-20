@@ -1,6 +1,6 @@
-use crate::ipnetwork::IpNetwork;
 use crate::common::Side;
 use crate::database::schema::*;
+use crate::ipnetwork::IpNetwork;
 
 pub type CountryCode = String;
 
