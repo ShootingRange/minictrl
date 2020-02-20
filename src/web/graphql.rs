@@ -7,6 +7,7 @@ use juniper::http::GraphQLRequest;
 use actix::{Addr, MailboxError};
 use crate::actors::database::*;
 use crate::actors::database::team::{CreateTeam, DeleteTeamById};
+use crate::actors::database::player::{CreatePlayer, DeletePlayerById};
 
 pub struct Context {
     db: Addr<DbExecutor>
@@ -146,15 +147,26 @@ impl MutationRoot {
         unpack_dbexecutor(result)
     }
 
+    async fn createPlayer(team_id: i32, name: String, tag: Option<String>, steamid: Option<String>, context: &Context) -> FieldResult<Player> {
+        let result = context.db.send(CreatePlayer{
+            team_id,
+            name,
+            tag,
+            steamid,
+        })
+            .await;
+
+        unpack_dbexecutor(result)
+    }
+
+    async fn deletePlayer(id: i32, context: &Context) -> FieldResult<bool> {
+        let result = context.db.send(DeletePlayerById{ id })
+            .await;
+
+        unpack_dbexecutor(result)
+    }
+
     /*
-    fn addPlayer(new_team: NewPlayer) -> FieldResult<Player> {
-        unimplemented!()
-    }
-
-    fn removePlayer(id: i32) -> FieldResult<Player> {
-        unimplemented!()
-    }
-
     fn updatePlayer(id: i32, player: NewPlayer) -> FieldResult<Player> {
         unimplemented!()
     }
@@ -166,6 +178,7 @@ pub type Schema = RootNode<'static, QueryRoot, MutationRoot>;
 pub fn create_schema() -> Schema {
     Schema::new(QueryRoot {}, MutationRoot {})
 }
+
 pub async fn graphiql() -> HttpResponse {
     let html = graphiql_source("http://127.0.0.1:8080/graphql");
     HttpResponse::Ok()
