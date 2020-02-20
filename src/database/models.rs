@@ -12,7 +12,7 @@ pub struct Team {
     pub logo: Option<String>,
 }
 
-#[derive(Insertable, GraphQLInputObject)]
+#[derive(Insertable)]
 #[table_name = "teams"]
 pub struct NewTeam {
     pub name: String,
@@ -29,7 +29,7 @@ pub struct Player {
     pub steamid: Option<String>,
 }
 
-#[derive(Insertable, GraphQLInputObject)]
+#[derive(Insertable)]
 #[table_name = "players"]
 pub struct NewPlayer {
     pub team_id: i32,
