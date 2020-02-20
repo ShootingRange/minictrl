@@ -9,6 +9,8 @@ use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
 use juniper::RootNode;
 use juniper::{FieldError, FieldResult};
+use std::net::IpAddr;
+use std::str::FromStr;
 
 pub struct Context {
     db: Addr<DbExecutor>,
@@ -99,6 +101,27 @@ impl Player {
 }
 
 #[juniper::graphql_object(
+Context = Context
+)]
+impl Server {
+    fn id(&self) -> i32 {
+        self.id
+    }
+
+    fn host(&self) -> String {
+        self.host.ip().to_string()
+    }
+
+    fn port(&self) -> i32 {
+        self.port
+    }
+
+    fn type_(&self) -> Option<String> {
+        self.type_.clone()
+    }
+}
+
+#[juniper::graphql_object(
 Context = Context,
 )]
 impl QueryRoot {
@@ -118,6 +141,12 @@ impl QueryRoot {
         let player = context.db.send(player::FindPlayerById { id }).await;
 
         unpack_dbexecutor(player)
+    }
+
+    async fn server(context: &Context, id: i32) -> FieldResult<Server> {
+        let server = context.db.send(player::FindServerById { id }).await;
+
+        unpack_dbexecutor(server)
     }
 }
 
@@ -188,6 +217,37 @@ impl MutationRoot {
         unimplemented!()
     }
     */
+
+    async fn createServer(
+        host: String,
+        port: i32,
+        type_: Option<String>,
+        context: &Context,
+    ) -> FieldResult<Server> {
+        let host = match IpAddr::from_str(host.as_str()) {
+            Ok(ipaddr) => ipaddr,
+            Err(err) => return if cfg!(debug_assertions) {
+                FieldResult::Err(FieldError::from(err))
+            } else {
+                FieldResult::Err(FieldError::from("Invalid IP address"))
+            },
+        };
+
+        if port < 1 || port >= 65536 {
+            return FieldResult::Err(FieldError::from("Invalid port, must be between 1 and 65535"))
+        }
+
+        let server = context
+            .db
+            .send(CreateServer {
+                host,
+                port: port as u16,
+                r#type: type_,
+            })
+            .await;
+
+        unpack_dbexecutor(server)
+    }
 }
 
 pub type Schema = RootNode<'static, QueryRoot, MutationRoot>;

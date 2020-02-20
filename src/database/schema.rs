@@ -48,7 +48,7 @@ table! {
     servers (id) {
         id -> Int4,
         host -> Inet,
-        port -> Int2,
+        port -> Int4,
         #[sql_name = "type"]
         type_ -> Nullable<Varchar>,
     }

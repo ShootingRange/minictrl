@@ -1,5 +1,5 @@
 use crate::actors::database::{DbActorError, DbExecutor};
-use crate::database::models::{NewPlayer, Player};
+use crate::database::models::{NewPlayer, Player, Server};
 use actix::{Handler, Message};
 use diesel::prelude::*;
 
@@ -103,6 +103,27 @@ impl Handler<FindPlayersByTeamId> for DbExecutor {
             .load::<Player>(&self.conn)
         {
             Ok(ps) => Ok(ps),
+            Err(err) => Err(DbActorError::DatabaseError(err)),
+        }
+    }
+}
+
+pub struct FindServerById {
+    pub id: i32,
+}
+
+impl Message for FindServerById {
+    type Result = Result<Server, DbActorError>;
+}
+
+impl Handler<FindServerById> for DbExecutor {
+    type Result = Result<Server, DbActorError>;
+
+    fn handle(&mut self, msg: FindServerById, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::database::schema::servers::dsl::*;
+
+        match servers.filter(id.eq(msg.id)).first::<Server>(&self.conn) {
+            Ok(t) => Ok(t),
             Err(err) => Err(DbActorError::DatabaseError(err)),
         }
     }

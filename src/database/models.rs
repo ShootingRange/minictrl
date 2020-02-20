@@ -1,6 +1,6 @@
 use crate::common::Side;
 use crate::database::schema::*;
-use crate::ipnetwork::IpNetwork;
+use ipnetwork::IpNetwork;
 
 pub type CountryCode = String;
 
@@ -42,7 +42,15 @@ pub struct NewPlayer {
 pub struct Server {
     pub id: i32,
     pub host: IpNetwork,
-    pub port: u16,
+    pub port: i32,
+    pub type_: Option<String>,
+}
+
+#[derive(Insertable)]
+#[table_name = "servers"]
+pub struct NewServer {
+    pub host: IpNetwork,
+    pub port: i32,
     pub type_: Option<String>,
 }
 
