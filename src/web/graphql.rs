@@ -109,6 +109,12 @@ impl QueryRoot {
         unpack_dbexecutor(team)
     }
 
+    async fn teams(context: &Context) -> FieldResult<Vec<Team>> {
+        let teams = context.db.send(team::GetTeams {}).await;
+
+        unpack_dbexecutor(teams)
+    }
+
     async fn player(context: &Context, id: i32) -> FieldResult<Player> {
         let player = context.db.send(player::FindPlayerById {
             id
