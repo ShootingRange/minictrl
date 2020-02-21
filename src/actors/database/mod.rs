@@ -4,8 +4,10 @@ use serde::export::fmt::Error;
 use serde::export::Formatter;
 use std::fmt::Display;
 
+pub mod r#match;
 pub mod player;
 pub mod server;
+pub mod spectator;
 pub mod team;
 
 pub struct DbExecutor {

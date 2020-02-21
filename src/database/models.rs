@@ -1,4 +1,4 @@
-use crate::common::Side;
+use crate::common::SideType;
 use crate::database::schema::*;
 use ipnetwork::IpNetwork;
 
@@ -66,11 +66,27 @@ pub struct Match {
     pub id: i32,
     pub server_id: i32,
     pub team1_id: i32,
+    pub team2_id: i32,
     pub team1_score: Option<i32>,
     pub team2_score: Option<i32>,
     pub num_maps: i32,
     pub skip_veto: bool,
-    pub veto_first: Side,
+    pub veto_first: SideType,
+    pub players_per_team: i32,
+    pub min_player_to_ready: i32,
+}
+
+#[derive(Insertable)]
+#[table_name = "matches"]
+pub struct NewMatch {
+    pub server_id: i32,
+    pub team1_id: i32,
+    pub team2_id: i32,
+    pub team1_score: Option<i32>,
+    pub team2_score: Option<i32>,
+    pub num_maps: i32,
+    pub skip_veto: bool,
+    pub veto_first: SideType,
     pub players_per_team: i32,
     pub min_player_to_ready: i32,
 }
@@ -90,6 +106,13 @@ pub struct MapList {
 #[table_name = "match_spectator"]
 pub struct MatchSpectator {
     pub id: i32,
+    pub match_id: i32,
+    pub spectator_id: i32,
+}
+
+#[derive(Insertable)]
+#[table_name = "match_spectator"]
+pub struct NewMatchSpectator {
     pub match_id: i32,
     pub spectator_id: i32,
 }

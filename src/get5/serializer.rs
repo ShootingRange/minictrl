@@ -1,4 +1,4 @@
-use crate::common::Side;
+use crate::common::SideType;
 use crate::get5::basic::*;
 use serde::ser::*;
 use serde::Serialize;
@@ -140,15 +140,15 @@ impl Serialize for Match {
     }
 }
 
-impl Serialize for Side {
+impl Serialize for SideType {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
     where
         S: Serializer,
     {
         match self {
-            Side::Standard => serializer.serialize_str("standard"),
-            Side::NeverKnife => serializer.serialize_str("never_knife"),
-            Side::AlwaysKnife => serializer.serialize_str("always_knife"),
+            SideType::Standard => serializer.serialize_str("standard"),
+            SideType::NeverKnife => serializer.serialize_str("never_knife"),
+            SideType::AlwaysKnife => serializer.serialize_str("always_knife"),
         }
     }
 }

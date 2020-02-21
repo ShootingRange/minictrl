@@ -8,7 +8,7 @@ use actix_cors::Cors;
 use actix_web::{web, App, HttpServer, Responder};
 use diesel::{Connection, PgConnection};
 use dotenv::dotenv;
-use minictrl::common::Side;
+use minictrl::common::SideType;
 use minictrl::web::graphql::*;
 use std::env;
 
@@ -18,7 +18,7 @@ async fn index2() -> impl Responder {
         num_maps: None,
         maplist: None,
         skip_veto: None,
-        side_type: Some(Side::AlwaysKnife),
+        side_type: Some(SideType::AlwaysKnife),
         players_per_team: None,
         min_players_to_ready: None,
         favored_percentage_team1: None,

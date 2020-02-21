@@ -1,4 +1,4 @@
-use crate::common::Side;
+use crate::common::SideType;
 use std::option::Option;
 
 /// Get5 Match schema
@@ -9,7 +9,7 @@ pub struct Match {
     pub num_maps: Option<i32>,
     pub maplist: Option<Vec<String>>,
     pub skip_veto: Option<bool>,
-    pub side_type: Option<Side>,
+    pub side_type: Option<SideType>,
     /// Contract: always more than 0
     pub players_per_team: Option<i32>,
     /// Contract: always 0 or more
