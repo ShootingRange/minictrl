@@ -80,5 +80,3 @@ impl Handler<DeleteSpectatorById> for DbExecutor {
             .map(|size| size > 0)
     }
 }
-
-// TODO add to match
