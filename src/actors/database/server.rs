@@ -1,9 +1,9 @@
 use crate::actors::database::{DbActorError, DbExecutor};
-use crate::database::models::{Server, NewServer};
+use crate::database::models::{NewServer, Server};
 use actix::{Handler, Message};
 use diesel::prelude::*;
-use std::net::IpAddr;
 use ipnetwork::IpNetwork;
+use std::net::IpAddr;
 
 pub struct CreateServer {
     pub host: IpAddr,

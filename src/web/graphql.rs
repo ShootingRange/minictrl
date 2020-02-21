@@ -226,15 +226,19 @@ impl MutationRoot {
     ) -> FieldResult<Server> {
         let host = match IpAddr::from_str(host.as_str()) {
             Ok(ipaddr) => ipaddr,
-            Err(err) => return if cfg!(debug_assertions) {
-                FieldResult::Err(FieldError::from(err))
-            } else {
-                FieldResult::Err(FieldError::from("Invalid IP address"))
-            },
+            Err(err) => {
+                return if cfg!(debug_assertions) {
+                    FieldResult::Err(FieldError::from(err))
+                } else {
+                    FieldResult::Err(FieldError::from("Invalid IP address"))
+                }
+            }
         };
 
         if port < 1 || port >= 65536 {
-            return FieldResult::Err(FieldError::from("Invalid port, must be between 1 and 65535"))
+            return FieldResult::Err(FieldError::from(
+                "Invalid port, must be between 1 and 65535",
+            ));
         }
 
         let server = context
