@@ -57,6 +57,13 @@ pub struct NewServer {
 #[derive(Identifiable, Queryable)]
 pub struct Spectator {
     pub id: i32,
+    // TODO name, should we fetch this from steam?
+    pub steamid: String,
+}
+
+#[derive(Insertable)]
+#[table_name = "spectators"]
+pub struct NewSpectator {
     pub steamid: String,
 }
 
@@ -96,6 +103,14 @@ pub struct NewMatch {
 #[table_name = "maplist"]
 pub struct MapList {
     pub id: i32,
+    pub match_id: i32,
+    pub order: i32,
+    pub map: String,
+}
+
+#[derive(Insertable)]
+#[table_name = "maplist"]
+pub struct NewMapList {
     pub match_id: i32,
     pub order: i32,
     pub map: String,
