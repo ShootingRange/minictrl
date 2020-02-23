@@ -2,52 +2,13 @@ extern crate dotenv;
 extern crate minictrl;
 
 use crate::minictrl::actors::database::*;
-use crate::minictrl::get5::basic;
 use actix::SyncArbiter;
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer, Responder};
+use actix_web::{web, App, HttpServer};
 use diesel::{Connection, PgConnection};
 use dotenv::dotenv;
-use minictrl::common::SideType;
 use minictrl::web::graphql::*;
 use std::env;
-
-async fn index2() -> impl Responder {
-    let m = basic::Match {
-        matchid: Some("foo".to_string()),
-        num_maps: None,
-        maplist: None,
-        skip_veto: None,
-        side_type: Some(SideType::AlwaysKnife),
-        players_per_team: None,
-        min_players_to_ready: None,
-        favored_percentage_team1: None,
-        favored_percentage_text: None,
-        cvars: None,
-        spectators: None,
-        team1: basic::Team {
-            name: "".to_string(),
-            tag: None,
-            flag: None,
-            logo: None,
-            players: vec![],
-            series_score: None,
-            match_text: None,
-        },
-        team2: basic::Team {
-            name: "".to_string(),
-            tag: None,
-            flag: None,
-            logo: None,
-            players: vec![],
-            series_score: None,
-            match_text: None,
-        },
-        match_title: None,
-    };
-    web::Json(m)
-    //HttpResponse::Ok().body("Hello world again!")
-}
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
@@ -76,9 +37,7 @@ async fn main() -> std::io::Result<()> {
             )
             .data(db_addr.clone())
             .data(create_schema())
-            //.service(web::resource("/").route(web::get().to(index)))
-            .service(web::resource("/again").route(web::get().to(index2)))
-            //.service(web::resource("/teams").route(web::get().to(list_teams)))
+            .service(web::resource("/get5/config/{id}").route(web::get().to(minictrl::web::get5_config)))
             .service(web::resource("/graphql").route(web::post().to(graphql)))
             .service(web::resource("/graphiql").route(web::get().to(graphiql)))
     })
