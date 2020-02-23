@@ -52,18 +52,20 @@ impl Serialize for Team {
             map.serialize_entry("logo", logo)?;
         }
 
-        let player_map: HashMap<String, String> = self
-            .players
-            .iter()
-            .map(|player| {
-                let name: String = match &player.name {
-                    None => "".to_string(),
-                    Some(n) => n.clone(),
-                };
-                (player.steamID.clone(), name)
-            })
-            .collect();
-        map.serialize_entry("players", &player_map)?;
+        if self.players.len() > 0 {
+            let player_map: HashMap<String, String> = self
+                .players
+                .iter()
+                .map(|player| {
+                    let name: String = match &player.name {
+                        None => "".to_string(),
+                        Some(n) => n.clone(),
+                    };
+                    (player.steamID.clone(), name)
+                })
+                .collect();
+            map.serialize_entry("players", &player_map)?;
+        }
 
         if let Some(series_score) = self.series_score {
             map.serialize_entry("series_score", &series_score)?;
