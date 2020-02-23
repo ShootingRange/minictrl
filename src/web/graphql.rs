@@ -1,8 +1,10 @@
 use crate::actors::database::player::{CreatePlayer, DeletePlayerById};
-use crate::actors::database::server::CreateServer;
-use crate::actors::database::team::{CreateTeam, DeleteTeamById};
+use crate::actors::database::r#match::{CreateMatch, DeleteMatchById, FindMatchById};
+use crate::actors::database::server::{CreateServer, DeleteServerById, FindServerById};
+use crate::actors::database::team::{CreateTeam, DeleteTeamById, FindTeamById};
 use crate::actors::database::*;
-use crate::database::models::{CountryCode, Player, Server, Team};
+use crate::common::SideType;
+use crate::database::models::{CountryCode, Player, Server, Team, Match};
 use actix::{Addr, MailboxError};
 use actix_web::{web, HttpResponse};
 use juniper::http::graphiql::graphiql_source;
@@ -122,6 +124,74 @@ impl Server {
 }
 
 #[juniper::graphql_object(
+Context = Context
+)]
+impl Match {
+    fn id(&self) -> i32 {
+        self.id
+    }
+
+    fn server_id(&self) -> i32 {
+        self.server_id
+    }
+
+    async fn team1(&self, context: &Context) -> FieldResult<Team> {
+        let team = context
+            .db
+            .send(FindTeamById { id: self.team1_id })
+            .await;
+
+        unpack_dbexecutor(team)
+    }
+
+    async fn team2(&self, context: &Context) -> FieldResult<Team> {
+        let team = context
+            .db
+            .send(FindTeamById { id: self.team2_id })
+            .await;
+
+        unpack_dbexecutor(team)
+    }
+
+    fn team1_score(&self) -> Option<i32> {
+        self.team1_score
+    }
+
+    fn team2_score(&self) -> Option<i32> {
+        self.team2_score
+    }
+
+    fn num_maps(&self) -> i32 {
+        self.num_maps
+    }
+
+    fn skip_veto(&self) -> bool {
+        self.skip_veto
+    }
+
+    fn veto_first(&self) -> SideType {
+        self.veto_first.clone()
+    }
+
+    fn players_per_team(&self) -> i32 {
+        self.players_per_team
+    }
+
+    fn min_players_to_ready(&self) -> i32 {
+        self.min_player_to_ready
+    }
+
+    async fn server(&self, context: &Context) -> FieldResult<Server> {
+        let server = context
+            .db
+            .send(FindServerById { id: self.server_id })
+            .await;
+
+        unpack_dbexecutor(server)
+    }
+}
+
+#[juniper::graphql_object(
 Context = Context,
 )]
 impl QueryRoot {
@@ -145,6 +215,12 @@ impl QueryRoot {
 
     async fn server(context: &Context, id: i32) -> FieldResult<Server> {
         let server = context.db.send(player::FindServerById { id }).await;
+
+        unpack_dbexecutor(server)
+    }
+
+    async fn match_(context: &Context, id: i32) -> FieldResult<Match> {
+        let server = context.db.send(FindMatchById { id }).await;
 
         unpack_dbexecutor(server)
     }
@@ -251,6 +327,52 @@ impl MutationRoot {
             .await;
 
         unpack_dbexecutor(server)
+    }
+
+    async fn deleteServer(id: i32, context: &Context) -> FieldResult<bool> {
+        let result = context.db.send(DeleteServerById { id }).await;
+
+        unpack_dbexecutor(result)
+    }
+
+    async fn createMatch(
+        server_id: i32,
+        team1_id: i32,
+        team2_id: i32,
+        team1_score: Option<i32>,
+        team2_score: Option<i32>,
+        num_maps: i32,
+        skip_veto: bool,
+        veto_first: SideType,
+        players_per_team: i32,
+        min_player_to_ready: i32,
+        context: &Context,
+    ) -> FieldResult<Match> {
+        // TODO validate, num_maps > 0, and is odd or 2
+
+        let m = context
+            .db
+            .send(CreateMatch {
+                server_id,
+                team1_id,
+                team2_id,
+                team1_score,
+                team2_score,
+                num_maps,
+                skip_veto,
+                veto_first,
+                players_per_team,
+                min_player_to_ready,
+            })
+            .await;
+
+        unpack_dbexecutor(m)
+    }
+
+    async fn deleteMatch(id: i32, context: &Context) -> FieldResult<bool> {
+        let result = context.db.send(DeleteMatchById { id }).await;
+
+        unpack_dbexecutor(result)
     }
 }
 
