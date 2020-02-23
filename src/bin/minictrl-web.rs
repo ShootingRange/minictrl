@@ -52,6 +52,7 @@ async fn index2() -> impl Responder {
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
+    env_logger::init();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
