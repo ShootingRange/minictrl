@@ -78,7 +78,7 @@ pub async fn get5_config(
 
     let team2 = db
         .send(FindTeamById {
-            id: r#match.team1_id,
+            id: r#match.team2_id,
         })
         .await;
 
