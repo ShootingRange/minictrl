@@ -35,7 +35,7 @@ pub struct Spectators {
 pub struct Team {
     pub name: String,
     pub tag: Option<String>,
-    pub flag: Option<[char; 2]>,
+    pub flag: Option<String>,
     pub logo: Option<String>,
     pub players: Vec<Player>,
     pub series_score: Option<i32>,

@@ -44,7 +44,7 @@ impl Serialize for Team {
             map.serialize_entry("tag", tag)?;
         }
 
-        if let Some(flag) = self.flag {
+        if let Some(flag) = &self.flag {
             map.serialize_entry("flag", &flag)?;
         }
 
