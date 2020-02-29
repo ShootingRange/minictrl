@@ -1,5 +1,5 @@
 use crate::actors::database::{DbActorError, DbExecutor};
-use crate::database::models::{NewSpectator, Spectator};
+use crate::database::models::{MatchSpectator, NewSpectator, Spectator};
 use actix::{Handler, Message};
 use diesel::prelude::*;
 
@@ -78,5 +78,36 @@ impl Handler<DeleteSpectatorById> for DbExecutor {
             .execute(&self.conn)
             .map_err(|err| DbActorError::DatabaseError(err))
             .map(|size| size > 0)
+    }
+}
+
+pub struct FindSpectatorsByMatch {
+    pub id: i32,
+}
+
+impl Message for FindSpectatorsByMatch {
+    type Result = Result<Vec<Spectator>, DbActorError>;
+}
+
+impl Handler<FindSpectatorsByMatch> for DbExecutor {
+    type Result = Result<Vec<Spectator>, DbActorError>;
+
+    fn handle(&mut self, msg: FindSpectatorsByMatch, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::database::schema::{match_spectator, spectators};
+
+        let match_spectators: Vec<MatchSpectator> = match_spectator::dsl::match_spectator
+            .filter(match_spectator::dsl::match_id.eq(msg.id))
+            .load::<MatchSpectator>(&self.conn)
+            .map_err(|err| DbActorError::DatabaseError(err))?;
+
+        match_spectators
+            .iter()
+            .map(|match_spectator| {
+                spectators::dsl::spectators
+                    .filter(spectators::dsl::id.eq(match_spectator.spectator_id))
+                    .first::<Spectator>(&self.conn)
+                    .map_err(|err| DbActorError::DatabaseError(err))
+            })
+            .collect()
     }
 }
