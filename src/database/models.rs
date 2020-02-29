@@ -4,7 +4,7 @@ use ipnetwork::IpNetwork;
 
 pub type CountryCode = String;
 
-#[derive(Identifiable, Queryable, Serialize)]
+#[derive(Identifiable, Queryable, Serialize, Debug)]
 pub struct Team {
     pub id: i32,
     pub name: String,
@@ -12,7 +12,7 @@ pub struct Team {
     pub logo: Option<String>,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name = "teams"]
 pub struct NewTeam {
     pub name: String,
@@ -20,7 +20,7 @@ pub struct NewTeam {
     pub logo: Option<String>,
 }
 
-#[derive(Identifiable, Queryable, Serialize)]
+#[derive(Identifiable, Queryable, Serialize, Debug)]
 pub struct Player {
     pub id: i32,
     pub name: String,
@@ -29,7 +29,7 @@ pub struct Player {
     pub steamid: Option<String>,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name = "players"]
 pub struct NewPlayer {
     pub team_id: i32,
@@ -38,7 +38,7 @@ pub struct NewPlayer {
     pub steamid: Option<String>,
 }
 
-#[derive(Identifiable, Queryable)]
+#[derive(Identifiable, Queryable, Debug)]
 pub struct Server {
     pub id: i32,
     pub host: IpNetwork,
@@ -46,7 +46,7 @@ pub struct Server {
     pub type_: Option<String>,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name = "servers"]
 pub struct NewServer {
     pub host: IpNetwork,
@@ -54,20 +54,20 @@ pub struct NewServer {
     pub type_: Option<String>,
 }
 
-#[derive(Identifiable, Queryable)]
+#[derive(Identifiable, Queryable, Debug)]
 pub struct Spectator {
     pub id: i32,
     // TODO name, should we fetch this from steam?
     pub steamid: String,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name = "spectators"]
 pub struct NewSpectator {
     pub steamid: String,
 }
 
-#[derive(Identifiable, Queryable)]
+#[derive(Identifiable, Queryable, Debug)]
 #[table_name = "matches"]
 pub struct Match {
     pub id: i32,
@@ -83,7 +83,7 @@ pub struct Match {
     pub min_player_to_ready: i32,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name = "matches"]
 pub struct NewMatch {
     pub server_id: i32,
@@ -98,7 +98,7 @@ pub struct NewMatch {
     pub min_player_to_ready: i32,
 }
 
-#[derive(Identifiable, Queryable, Associations)]
+#[derive(Identifiable, Queryable, Associations, Debug)]
 #[belongs_to(Match)]
 #[table_name = "maplist"]
 pub struct MapList {
@@ -108,7 +108,7 @@ pub struct MapList {
     pub map: String,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name = "maplist"]
 pub struct NewMapList {
     pub match_id: i32,
@@ -116,7 +116,7 @@ pub struct NewMapList {
     pub map: String,
 }
 
-#[derive(Identifiable, Queryable, Associations)]
+#[derive(Identifiable, Queryable, Associations, Debug)]
 #[belongs_to(Match)]
 #[table_name = "match_spectator"]
 pub struct MatchSpectator {
@@ -125,7 +125,7 @@ pub struct MatchSpectator {
     pub spectator_id: i32,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name = "match_spectator"]
 pub struct NewMatchSpectator {
     pub match_id: i32,
