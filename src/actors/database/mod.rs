@@ -4,6 +4,7 @@ use serde::export::fmt::Error;
 use serde::export::Formatter;
 use std::fmt::Display;
 
+pub mod maps;
 pub mod r#match;
 pub mod player;
 pub mod server;
