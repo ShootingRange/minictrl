@@ -37,7 +37,9 @@ async fn main() -> std::io::Result<()> {
             )
             .data(db_addr.clone())
             .data(create_schema())
-            .service(web::resource("/get5/config/{id}").route(web::get().to(minictrl::web::get5_config)))
+            .service(
+                web::resource("/get5/config/{id}").route(web::get().to(minictrl::web::get5_config)),
+            )
             .service(web::resource("/graphql").route(web::post().to(graphql)))
             .service(web::resource("/graphiql").route(web::get().to(graphiql)))
     })

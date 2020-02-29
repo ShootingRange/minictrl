@@ -4,7 +4,7 @@ use crate::actors::database::server::{CreateServer, DeleteServerById, FindServer
 use crate::actors::database::team::{CreateTeam, DeleteTeamById, FindTeamById};
 use crate::actors::database::*;
 use crate::common::SideType;
-use crate::database::models::{CountryCode, Player, Server, Team, Match};
+use crate::database::models::{CountryCode, Match, Player, Server, Team};
 use actix::{Addr, MailboxError};
 use actix_web::{web, HttpResponse};
 use juniper::http::graphiql::graphiql_source;
@@ -136,19 +136,13 @@ impl Match {
     }
 
     async fn team1(&self, context: &Context) -> FieldResult<Team> {
-        let team = context
-            .db
-            .send(FindTeamById { id: self.team1_id })
-            .await;
+        let team = context.db.send(FindTeamById { id: self.team1_id }).await;
 
         unpack_dbexecutor(team)
     }
 
     async fn team2(&self, context: &Context) -> FieldResult<Team> {
-        let team = context
-            .db
-            .send(FindTeamById { id: self.team2_id })
-            .await;
+        let team = context.db.send(FindTeamById { id: self.team2_id }).await;
 
         unpack_dbexecutor(team)
     }
@@ -182,10 +176,7 @@ impl Match {
     }
 
     async fn server(&self, context: &Context) -> FieldResult<Server> {
-        let server = context
-            .db
-            .send(FindServerById { id: self.server_id })
-            .await;
+        let server = context.db.send(FindServerById { id: self.server_id }).await;
 
         unpack_dbexecutor(server)
     }
