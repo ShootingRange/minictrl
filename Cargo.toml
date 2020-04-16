@@ -19,3 +19,4 @@ juniper = { git = "https://github.com/graphql-rust/juniper", rev = "547cf3e36fa0
 futures = "0.3"
 rcon = "0.2.0"
 env_logger = "0.7.1"
+regex = "1"
