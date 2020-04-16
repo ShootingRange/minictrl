@@ -30,7 +30,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(actix_web::middleware::Logger::default())
             .wrap(
                 Cors::new()
-                    .allowed_origin("http://localhost:8080")
+                    .allowed_origin("*")
                     .supports_credentials()
                     .max_age(3600)
                     .finish(),
