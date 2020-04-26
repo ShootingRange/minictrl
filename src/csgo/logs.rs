@@ -1,6 +1,8 @@
 use std::marker::PhantomData;
 
-use regex::{Regex, RegexSet};
+use regex::{Regex, RegexSet, Captures};
+use std::str::FromStr;
+use std::fmt::Debug;
 
 pub struct LogPrefix {
     pub month: i32,
@@ -288,6 +290,41 @@ pub enum Error<E> {
     Unknown(String),
 }
 
+fn extract_parse<E: FromStr>(captures: &Captures, group: &str) -> E
+    where E::Err: Debug {
+    // TODO build expect messages at compile time using something like the concat! macro. A combination of macros and functions could be effective, https://godbolt.org/z/bAJUG9
+    captures.name(group)
+        .expect(format!("no match for capture \"{}\"", group).as_str())
+        .as_str()
+        .parse()
+        .unwrap()
+        //.expect(format!("Failed to parse \"{}\"", group).as_str())
+}
+
+fn extract_into<'t, E: From<&'t str>>(captures: &Captures<'t>, group: &str) -> E {
+    captures.name(group)
+        .expect(format!("no match for capture \"{}\"", group).as_str())
+        .as_str()
+        .into()
+}
+
+fn extract_str<'t>(captures: &Captures<'t>, group: &str) -> &'t str {
+    captures.name(group)
+        .expect(format!("no match for capture \"{}\"", group).as_str())
+        .as_str()
+}
+
+fn extract_prefix(captures: &Captures) -> LogPrefix {
+    LogPrefix {
+        month: extract_parse(captures, "log_month"),
+        day: extract_parse(captures, "log_day"),
+        year: extract_parse(captures, "log_year"),
+        hour: extract_parse(captures, "log_hour"),
+        minute: extract_parse(captures, "log_minute"),
+        second: extract_parse(captures, "log_second"),
+    }
+}
+
 impl<R: LogEntryReader<E>, E> LogProcessor<R, E> {
     pub fn new(reader: R) -> Self {
         LogProcessor {
@@ -317,39 +354,25 @@ impl<R: LogEntryReader<E>, E> LogProcessor<R, E> {
             _ => return Result::Err(Error::Ambiguous)
         };
 
+
+        let captures = SINGLE_REGEXES[index]
+            .captures(line.as_str())
+            .expect("Log line matches REGEX_SET but fails SINGLE_REGEXES");
+
         match index {
             0 => {
-                let captures = SINGLE_REGEXES[index]
-                    .captures(line.as_str())
-                    .expect("Log line matches REGEX_SET but fails SINGLE_REGEXES");
-
-                let month = captures.name("log_month").expect("no match for capture \"\"").as_str().parse().unwrap();
-                let day = captures.name("log_day").expect("no match for capture \"\"").as_str().parse().unwrap();
-                let year = captures.name("log_year").expect("no match for capture \"\"").as_str().parse().unwrap();
-                let hour = captures.name("log_hour").expect("no match for capture \"\"").as_str().parse().unwrap();
-                let minute = captures.name("log_minute").expect("no match for capture \"\"").as_str().parse().unwrap();
-                let second = captures.name("log_second").expect("no match for capture \"\"").as_str().parse().unwrap();
-
-                let prefix = LogPrefix {
-                    month,
-                    day,
-                    year,
-                    hour,
-                    minute,
-                    second,
-                };
-
-                let file = captures.name("file").expect("no match for capture \"file\"").as_str().into();
-                let game = captures.name("game").expect("no match for capture \"game\"").as_str().into();
-                let version = captures.name("version").expect("no match for capture \"version\"").as_str().parse().unwrap();
-
                 Ok(LogEntry::LogFileStart {
-                    prefix,
-                    file,
-                    game,
-                    version,
+                    prefix: extract_prefix(&captures),
+                    file: extract_into(&captures, "file"),
+                    game: extract_into(&captures, "game"),
+                    version: extract_parse(&captures, "version"),
                 })
-            }
+            },
+            1 => {
+                Ok(LogEntry::LogFileClosed {
+                    prefix: extract_prefix(&captures),
+                })
+            },
             // TODO for cvar dump, process by recursion. If a non cvar_dump is found return that, otherwise return the completed cvar_dump when it has completed. (tail recursion!)
             _ => {
                 panic!("Matched a unimplemented regex (index={}). The code should probably be updated", index);
@@ -393,6 +416,25 @@ mod test {
             assert_eq!(file, "logs/L000_000_000_000_0_202001020304_000.log");
             assert_eq!(game, "/home/steam/csgo/csgo");
             assert_eq!(version, 7713);
+        } else {
+            assert!(false)
+        }
+    }
+
+    #[actix_rt::test]
+    async fn log_closed() {
+        let logline: LogLine = r#"L 01/02/2020 - 03:04:05: Log file closed"#.to_string();
+        let processor = LogProcessor::new(logline);
+        let result = processor.read_entry().await;
+
+        let logentry = result.unwrap();
+        if let super::LogEntry::LogFileClosed { prefix } = logentry {
+            assert_eq!(prefix.month, 1);
+            assert_eq!(prefix.day, 2);
+            assert_eq!(prefix.year, 2020);
+            assert_eq!(prefix.hour, 3);
+            assert_eq!(prefix.minute, 4);
+            assert_eq!(prefix.second, 5);
         } else {
             assert!(false)
         }
