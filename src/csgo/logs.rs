@@ -1,8 +1,4 @@
-use std::convert::TryInto;
-use std::fs::File;
-use std::io::{BufReader, prelude::*};
 use std::marker::PhantomData;
-use std::path::Path;
 
 use regex::{Regex, RegexSet};
 
@@ -273,30 +269,6 @@ lazy_static! {
         .collect();
 }
 
-fn parse_logfile<P: AsRef<Path>>(path: P) {
-
-    // TODO player regex fails on players with a "<" character in their name
-
-
-
-    let file = File::open(path).unwrap();
-    let reader = BufReader::new(file);
-
-    for line in reader.lines() {
-        match line {
-            Ok(line) => {
-                let m = REGEX.matches(&line);
-                if !m.matched_any() {
-                    println!("{}", line);
-                }
-            }
-            Err(err) => {
-                panic!(err)
-            }
-        }
-    }
-}
-
 #[async_trait]
 pub trait LogEntryReader<E> {
     async fn read_log_line(self) -> Result<String, E>;
@@ -388,6 +360,9 @@ impl<R: LogEntryReader<E>, E> LogProcessor<R, E> {
 
 #[cfg(test)]
 mod test {
+    use std::fs::File;
+    use std::io::{BufReader, prelude::*};
+
     use crate::csgo::logs::LogProcessor;
 
     type LogLine = String;
@@ -420,6 +395,34 @@ mod test {
             assert_eq!(version, 7713);
         } else {
             assert!(false)
+        }
+    }
+
+    #[test]
+    #[ignore]
+    /// Process a pile of CS:GO log files, and check if all lines can be matched.
+    /// Ignored by default because not all developers have access to logs to test on.
+    fn parse_log_files() {
+        // TODO player regex fails on players with a "<" character in their name
+
+        let files: Vec<String> = vec![];
+        for file in files {
+            let file = File::open(file).unwrap();
+            let reader = BufReader::new(file);
+
+            for line in reader.lines() {
+                match line {
+                    Ok(line) => {
+                        let m = super::REGEX.matches(&line);
+                        if !m.matched_any() {
+                            println!("{}", line);
+                        }
+                    }
+                    Err(err) => {
+                        panic!(err)
+                    }
+                }
+            }
         }
     }
 }
