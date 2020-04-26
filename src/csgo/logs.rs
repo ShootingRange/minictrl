@@ -373,6 +373,12 @@ impl<R: LogEntryReader<E>, E> LogProcessor<R, E> {
                     prefix: extract_prefix(&captures),
                 })
             },
+            2 => {
+                Ok(LogEntry::WorldTriggeredEvent {
+                    prefix: extract_prefix(&captures),
+                    event: extract_into(&captures, "event"),
+                })
+            }
             // TODO for cvar dump, process by recursion. If a non cvar_dump is found return that, otherwise return the completed cvar_dump when it has completed. (tail recursion!)
             _ => {
                 panic!("Matched a unimplemented regex (index={}). The code should probably be updated", index);
@@ -435,6 +441,22 @@ mod test {
             assert_eq!(prefix.hour, 3);
             assert_eq!(prefix.minute, 4);
             assert_eq!(prefix.second, 5);
+        } else {
+            assert!(false)
+        }
+    }
+
+    #[actix_rt::test]
+    async fn log_world_triggered_event() {
+        let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: World triggered "Round_Start""#).await;
+        if let super::LogEntry::WorldTriggeredEvent { prefix, event } = logentry {
+            assert_eq!(prefix.month, 1);
+            assert_eq!(prefix.day, 2);
+            assert_eq!(prefix.year, 2020);
+            assert_eq!(prefix.hour, 3);
+            assert_eq!(prefix.minute, 4);
+            assert_eq!(prefix.second, 5);
+            assert_eq!(event, "Round_Start")
         } else {
             assert!(false)
         }
