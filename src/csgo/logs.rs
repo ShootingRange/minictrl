@@ -386,7 +386,7 @@ mod test {
     use std::fs::File;
     use std::io::{BufReader, prelude::*};
 
-    use crate::csgo::logs::LogProcessor;
+    use crate::csgo::logs::{LogProcessor, LogEntry};
 
     type LogLine = String;
 
@@ -398,13 +398,17 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
-    async fn log_start() {
-        let logline: LogLine = r#"L 01/02/2020 - 03:04:05: Log file started (file "logs/L000_000_000_000_0_202001020304_000.log") (game "/home/steam/csgo/csgo") (version "7713")"#.to_string();
+    async fn parse_line(line: &str) -> LogEntry {
+        let logline: LogLine = line.to_string();
         let processor = LogProcessor::new(logline);
         let result = processor.read_entry().await;
 
-        let logentry = result.unwrap();
+        result.unwrap()
+    }
+
+    #[actix_rt::test]
+    async fn log_start() {
+        let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: Log file started (file "logs/L000_000_000_000_0_202001020304_000.log") (game "/home/steam/csgo/csgo") (version "7713")"#).await;
         if let super::LogEntry::LogFileStart { prefix, file, game, version } = logentry {
             assert_eq!(prefix.month, 1);
             assert_eq!(prefix.day, 2);
@@ -423,11 +427,7 @@ mod test {
 
     #[actix_rt::test]
     async fn log_closed() {
-        let logline: LogLine = r#"L 01/02/2020 - 03:04:05: Log file closed"#.to_string();
-        let processor = LogProcessor::new(logline);
-        let result = processor.read_entry().await;
-
-        let logentry = result.unwrap();
+        let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: Log file closed"#).await;
         if let super::LogEntry::LogFileClosed { prefix } = logentry {
             assert_eq!(prefix.month, 1);
             assert_eq!(prefix.day, 2);
