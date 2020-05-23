@@ -5,6 +5,24 @@ use std::time::Duration;
 
 use regex::{Captures, Match, Regex, RegexSet};
 
+// NOTES ON LOG PROCESSING
+//
+// The log can be processed line by line, meaning it's possible to start processing a log file
+// starting from any line. This does have one assumption, players should not be able to cause a
+// line change. It's currently untested whether a player can insert a newline in there Steam
+// nickname, or in a chat message, but if they can it's likely to make it's way into the log files
+// because Valve doesn't insert any escaping in the log format.
+//
+// Two groups of log lines needs to be parsed statefully. The CVARs dump and ACCOLADE lines needs
+// the context of previous lines to provide full information. If processing starts in the middle
+// of one of the two, these lines can be discarded without breaking anything. The stateful
+// interpretation of these can be moved outside the parser.
+//
+// A couple of regexes are known to fail if a player's Steam nickname contains a less than
+// character, `<`. This is unfixable since some log lines contains user input in two places
+// (nickname and chat message for instance), and Valve doesn't provide any escape characters.
+
+
 #[derive(Debug, PartialEq)]
 pub struct LogPrefix {
     pub month: i32,
@@ -2265,8 +2283,6 @@ mod test {
     /// Process a pile of CS:GO log files, and check if all lines can be matched.
     /// Ignored by default because not all developers have access to logs to test on.
     fn parse_log_files() {
-        // TODO player regex fails on players with a "<" character in their name
-
         // Fill with file paths to log files
         let files: Vec<&str> = vec![
             // Insert paths to log files
