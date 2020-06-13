@@ -5,7 +5,8 @@ pool:
   vmImage: ubuntu-18.04
 
 variables:
-  RUSTFLAGS: -Dwarnings
+  #RUSTFLAGS: -Dwarnings
+  RUSTFLAGS: ""
 
 jobs:
   # Test minictrl-web
