@@ -1,19 +1,30 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
-trigger:
-- "*"
+#trigger: ["*"]
+#pr: ["*"]
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: ubuntu-18.04
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+variables:
+  RUSTFLAGS: -Dwarnings
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+jobs:
+  # Test minictrl-web
+  - template: ci/azure-test-stable.yml
+    parameters:
+      rust: 1.42.0
+      bins:
+        - minictrl-agent
+        - minictrl-cli
+        - minictrl-web
+
+  # Check formatting
+  - template: ci/azure-rustfmt.yml
+    parameters:
+      rust: stable
+      name: rustfmt
+
+  # Lint using clippy
+  - template: ci/azure-clippy.yml
+    parameters:
+      rust: stable
+      name: clippy
