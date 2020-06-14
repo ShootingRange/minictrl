@@ -7,17 +7,15 @@ extern crate serde_json;
 #[macro_use]
 extern crate diesel_derive_enum;
 extern crate juniper;
+extern crate regex;
+#[macro_use]
+extern crate lazy_static;
+#[macro_use]
+extern crate async_trait;
 
 pub mod actors;
 pub mod common;
+pub mod csgo;
 pub mod database;
 pub mod get5;
 pub mod web;
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
