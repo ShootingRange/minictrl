@@ -22,3 +22,6 @@ env_logger = "0.7.1"
 regex = "1"
 lazy_static = "1.4.0"
 async-trait = "0.1.30"
+
+[dev-dependencies]
+assert_approx_eq = "1.1.0"

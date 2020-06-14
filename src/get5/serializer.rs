@@ -52,7 +52,7 @@ impl Serialize for Team {
             map.serialize_entry("logo", logo)?;
         }
 
-        if self.players.len() > 0 {
+        if !self.players.is_empty() {
             let player_map: HashMap<String, String> = self
                 .players
                 .iter()

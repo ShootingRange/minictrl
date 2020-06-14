@@ -30,7 +30,7 @@ impl Handler<CreatePlayer> for DbExecutor {
         diesel::insert_into(players)
             .values(&player)
             .get_result::<Player>(&self.conn)
-            .map_err(|err| DbActorError::DatabaseError(err))
+            .map_err(DbActorError::DatabaseError)
     }
 }
 
@@ -79,7 +79,7 @@ impl Handler<DeletePlayerById> for DbExecutor {
 
         diesel::delete(players.filter(id.eq(msg.id)))
             .execute(&self.conn)
-            .map_err(|err| DbActorError::DatabaseError(err))
+            .map_err(DbActorError::DatabaseError)
             .map(|size| size > 0)
     }
 }

@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use std::str::FromStr;
 use std::time::Duration;
 
-use regex::{Captures, Match, Regex, RegexSet};
+use regex::{Captures, Regex, RegexSet};
 
 // NOTES ON LOG PROCESSING
 //
@@ -526,6 +526,7 @@ lazy_static! {
     static ref SINGLE_REGEXES: Vec<Regex> = REGEX_STRINGS.iter()
         .enumerate()
         .map(|(i, regex_string)| {
+            #[allow(clippy::expect_fun_call)]
             Regex::new(regex_string)
                 .expect(format!("Failed create a regex for log string regex {}", i).as_str())
         })
@@ -556,6 +557,7 @@ where
     E::Err: Debug,
 {
     // TODO build expect messages at compile time using something like the concat! macro. A combination of macros and functions could be effective, https://godbolt.org/z/bAJUG9
+    #[allow(clippy::expect_fun_call)]
     captures
         .name(group)
         .expect(format!("no match for capture \"{}\"", group).as_str())
@@ -580,6 +582,7 @@ where
 }
 
 fn extract_into<'t, E: From<&'t str>>(captures: &Captures<'t>, group: &str) -> E {
+    #[allow(clippy::expect_fun_call)]
     captures
         .name(group)
         .expect(format!("no match for capture \"{}\"", group).as_str())
@@ -595,6 +598,7 @@ fn extract_optional_into<'t, E: From<&'t str>>(captures: &Captures<'t>, group: &
 }
 
 fn extract_str<'t>(captures: &Captures<'t>, group: &str) -> &'t str {
+    #[allow(clippy::expect_fun_call)]
     captures
         .name(group)
         .expect(format!("no match for capture \"{}\"", group).as_str())
@@ -620,6 +624,7 @@ fn extract_prefix(captures: &Captures) -> LogPrefix {
 }
 
 fn extract_team(captures: &Captures, group: &str) -> Team {
+    #[allow(clippy::expect_fun_call)]
     let team = captures
         .name(group)
         .expect(format!("no match for capture \"{}\"", group).as_str())
@@ -633,6 +638,7 @@ fn extract_team(captures: &Captures, group: &str) -> Team {
 }
 
 fn extract_team_all(captures: &Captures, group: &str) -> TeamAll {
+    #[allow(clippy::expect_fun_call)]
     let team = captures
         .name(group)
         .expect(format!("no match for capture \"{}\"", group).as_str())
@@ -650,6 +656,7 @@ fn extract_team_all(captures: &Captures, group: &str) -> TeamAll {
 }
 
 fn extract_player_id(captures: &Captures, group: &str) -> PlayerID {
+    #[allow(clippy::expect_fun_call)]
     let team = captures
         .name(group)
         .expect(format!("no match for capture \"{}\"", group).as_str())
@@ -690,7 +697,7 @@ fn extract_vector3(captures: &Captures, prefix: &str) -> Vector3 {
 fn extract_kill_attributes(captures: &Captures) -> KillAttributes {
     let capture = captures.name("kill_attributes");
 
-    if let Option::None = capture {
+    if capture.is_none() {
         return KillAttributes {
             headshot: false,
             penetrated: false,
@@ -888,9 +895,9 @@ impl<R: LogEntryReader<E>, E> LogProcessor<R, E> {
                 // When the list of instruments is non-empty, a trailing space has to be removed,
                 // otherwise a trailing empty element is produced.
                 let raw_instruments = extract_into::<String>(&captures, "instruments");
-                let raw_instruments = raw_instruments.trim_end_matches(" ");
+                let raw_instruments = raw_instruments.trim_end_matches(' ');
                 let instruments = raw_instruments
-                    .split(" ")
+                    .split(' ')
                     .map(|instrument| instrument.to_string())
                     .collect::<Vec<String>>();
 
@@ -1102,15 +1109,13 @@ impl<R: LogEntryReader<E>, E> LogProcessor<R, E> {
 
 #[cfg(test)]
 mod test {
+    use assert_approx_eq::assert_approx_eq;
     use std::fs::File;
     use std::io::{prelude::*, BufReader};
 
     use actix::clock::Duration;
 
-    use crate::csgo::logs::HitGroup::Head;
-    use crate::csgo::logs::{
-        HitGroup, KillAttributes, LogEntry, LogProcessor, Player, Team, TeamAll,
-    };
+    use crate::csgo::logs::{HitGroup, KillAttributes, LogEntry, LogProcessor, Team, TeamAll};
 
     type LogLine = String;
 
@@ -1118,7 +1123,7 @@ mod test {
     impl super::LogEntryReader<LogLine> for LogLine {
         // replace Err type with the never type once stabilized, https://github.com/rust-lang/rust/issues/35121
         async fn read_log_line(self) -> Result<String, String> {
-            Ok(self.clone())
+            Ok(self)
         }
     }
 
@@ -1683,6 +1688,13 @@ mod test {
             assert_eq!(prefix.hour, 3);
             assert_eq!(prefix.minute, 4);
             assert_eq!(prefix.second, 5);
+            assert_eq!(player.nick, "foobar");
+            assert_eq!(player.entity_index, 20);
+            assert_eq!(
+                player.id,
+                super::PlayerID::STAMID("STEAM_1:1:12345678".to_string())
+            );
+            assert_eq!(player.team, super::TeamAll::CT);
             assert_eq!(msg, "hello world!");
         } else {
             panic!("wrong LogEntry type received, {:#?}", logentry)
@@ -1819,6 +1831,7 @@ mod test {
                 super::PlayerID::STAMID("STEAM_1:1:87654321".to_string())
             );
             assert_eq!(victim.team, super::TeamAll::TERRORIST);
+            assert_eq!(entindex, 333);
         } else {
             panic!("wrong LogEntry type received, {:#?}", logentry)
         }
@@ -2184,12 +2197,12 @@ mod test {
             assert_eq!(prefix.hour, 3);
             assert_eq!(prefix.minute, 4);
             assert_eq!(prefix.second, 5);
-            assert_eq!(location_x, 1607.403809);
-            assert_eq!(location_y, -1526.890625);
-            assert_eq!(location_z, -341.364044);
-            assert_eq!(velocity_x, -812.841064);
-            assert_eq!(velocity_y, -28.768530);
-            assert_eq!(velocity_z, 418.548157);
+            assert_approx_eq!(location_x, 1_607.403_8, std::f32::EPSILON); // 1607.403809
+            assert_approx_eq!(location_y, -1_526.890_6, std::f32::EPSILON); // -1526.890625
+            assert_approx_eq!(location_z, -341.364_04, std::f32::EPSILON); // -341.364044
+            assert_approx_eq!(velocity_x, -812.841_06, std::f32::EPSILON); // -812.841064
+            assert_approx_eq!(velocity_y, -28.768_53, std::f32::EPSILON); // -28.768530
+            assert_approx_eq!(velocity_z, 418.548_16, std::f32::EPSILON); // 418.548157
         } else {
             panic!("wrong LogEntry type received, {:#?}", logentry)
         }
@@ -2421,9 +2434,9 @@ mod test {
             assert_eq!(categorie, "assists");
             assert_eq!(player, "foobar");
             assert_eq!(player_entindex, 2);
-            assert_eq!(value, 3.0);
+            assert_approx_eq!(value, 3.0f32, std::f32::EPSILON);
             assert_eq!(pos, 1);
-            assert_eq!(score, 0.357143);
+            assert_approx_eq!(score, 0.357_143_f32, std::f32::EPSILON);
         } else {
             panic!("wrong LogEntry type received, {:#?}", logentry)
         }
