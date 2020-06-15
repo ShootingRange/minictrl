@@ -6,7 +6,7 @@ use crate::actors::database::*;
 use crate::common::SideType;
 use crate::database::models::{CountryCode, Match, Player, Server, Team};
 use actix::{Addr, MailboxError};
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpResponse, HttpRequest};
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
 use juniper::RootNode;
@@ -373,8 +373,13 @@ pub fn create_schema() -> Schema {
     Schema::new(QueryRoot {}, MutationRoot {})
 }
 
-pub async fn graphiql() -> HttpResponse {
-    let html = graphiql_source("http://127.0.0.1:8080/graphql");
+pub async fn graphiql(req: HttpRequest) -> HttpResponse {
+    let host = match req.headers().get("Host") {
+        None => "127.0.0.1",
+        Some(header_value) => header_value.to_str().unwrap_or("127.0.0.1"),
+    };
+    let endpoint = format!("http://{}/graphql", host);
+    let html = graphiql_source(endpoint.as_str());
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(html)
