@@ -24,7 +24,7 @@ impl Handler<CreateSpectator> for DbExecutor {
         diesel::insert_into(spectators)
             .values(&spectator)
             .get_result::<Spectator>(&self.conn)
-            .map_err(|err| DbActorError::DatabaseError(err))
+            .map_err(DbActorError::DatabaseError)
     }
 }
 
@@ -76,7 +76,7 @@ impl Handler<DeleteSpectatorById> for DbExecutor {
 
         diesel::delete(spectators.filter(id.eq(msg.id)))
             .execute(&self.conn)
-            .map_err(|err| DbActorError::DatabaseError(err))
+            .map_err(DbActorError::DatabaseError)
             .map(|size| size > 0)
     }
 }
@@ -98,7 +98,7 @@ impl Handler<FindSpectatorsByMatch> for DbExecutor {
         let match_spectators: Vec<MatchSpectator> = match_spectator::dsl::match_spectator
             .filter(match_spectator::dsl::match_id.eq(msg.id))
             .load::<MatchSpectator>(&self.conn)
-            .map_err(|err| DbActorError::DatabaseError(err))?;
+            .map_err(DbActorError::DatabaseError)?;
 
         match_spectators
             .iter()
@@ -106,7 +106,7 @@ impl Handler<FindSpectatorsByMatch> for DbExecutor {
                 spectators::dsl::spectators
                     .filter(spectators::dsl::id.eq(match_spectator.spectator_id))
                     .first::<Spectator>(&self.conn)
-                    .map_err(|err| DbActorError::DatabaseError(err))
+                    .map_err(DbActorError::DatabaseError)
             })
             .collect()
     }

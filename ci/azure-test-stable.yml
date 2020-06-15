@@ -1,0 +1,38 @@
+jobs:
+  - job: ${{ parameters.name }}
+    displayName: ${{ parameters.displayName }}
+    strategy:
+      matrix:
+        Linux:
+          vmImage: ubuntu-18.04
+
+        ${{ if parameters.cross }}:
+          MacOS:
+            vmImage: macos-latest
+          Windows:
+            vmImage: vs2017-win2016
+    pool:
+      vmImage: $(vmImage)
+
+    steps:
+      - template: azure-install-rust.yml
+        parameters:
+          rust_version: ${{ parameters.rust }}
+
+      - template: azure-is-release.yml
+
+      # Run test with cargo
+      - script: cargo test
+        env:
+          RUST_BACKTRACE: 1
+          CI: 'True'
+        displayName: minictrl - cargo test
+
+      # Build all library binaries
+      - ${{ each bin in parameters.bins }}:
+        # Build binary
+        - script: cargo build
+          env:
+            RUST_BACKTRACE: 1
+            CI: 'True'
+          displayName: ${{ bin }} - cargo build

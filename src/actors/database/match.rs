@@ -43,7 +43,7 @@ impl Handler<CreateMatch> for DbExecutor {
         diesel::insert_into(matches)
             .values(&r#match)
             .get_result::<Match>(&self.conn)
-            .map_err(|err| DbActorError::DatabaseError(err))
+            .map_err(DbActorError::DatabaseError)
     }
 }
 
@@ -92,7 +92,7 @@ impl Handler<DeleteMatchById> for DbExecutor {
 
         diesel::delete(matches.filter(id.eq(msg.id)))
             .execute(&self.conn)
-            .map_err(|err| DbActorError::DatabaseError(err))
+            .map_err(DbActorError::DatabaseError)
             .map(|size| size > 0)
     }
 }
@@ -120,7 +120,7 @@ impl Handler<AddSpectatorToMatch> for DbExecutor {
         diesel::insert_into(match_spectator)
             .values(relation)
             .get_result::<MatchSpectator>(&self.conn)
-            .map_err(|err| DbActorError::DatabaseError(err))
+            .map_err(DbActorError::DatabaseError)
     }
 }
 
@@ -145,7 +145,7 @@ impl Handler<RemoveSpectatorFromMatch> for DbExecutor {
                 .filter(match_id.eq(msg.match_id)),
         )
         .execute(&self.conn)
-        .map_err(|err| DbActorError::DatabaseError(err))
+        .map_err(DbActorError::DatabaseError)
         .map(|size| size > 0)
     }
 }

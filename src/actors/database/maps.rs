@@ -39,7 +39,7 @@ impl Handler<SetMapListForMatch> for DbExecutor {
 
                 Ok(())
             })
-            .map_err(|err| DbActorError::DatabaseError(err))?;
+            .map_err(DbActorError::DatabaseError)?;
 
         Ok(())
     }
