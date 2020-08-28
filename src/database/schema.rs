@@ -51,6 +51,7 @@ table! {
         port -> Int4,
         #[sql_name = "type"]
         type_ -> Nullable<Varchar>,
+        password -> Text,
     }
 }
 

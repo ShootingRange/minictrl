@@ -1,0 +1,1 @@
+ALTER TABLE servers ADD COLUMN password text not null default '';
