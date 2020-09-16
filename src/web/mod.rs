@@ -1,54 +1,43 @@
-use crate::actors::database::player::FindPlayersByTeamId;
-use crate::actors::database::r#match::FindMatchById;
-use crate::actors::database::team::FindTeamById;
-use crate::actors::database::DbExecutor;
 use crate::common::SideType;
-use crate::database::models::{Player, Team};
+use crate::database;
+use crate::database::models::Player;
+use crate::database::Database;
 use crate::get5::basic::{Match as Get5Match, Player as Get5Player, Team as Get5Team};
-use actix::Addr;
-use actix_web::error::InternalError;
-use actix_web::web;
-use actix_web::{HttpRequest, Responder};
+use diesel::result::Error;
+use slog::{error, trace, Logger};
+use std::convert::Infallible;
+use std::sync::Arc;
+use warp::http::StatusCode;
+use warp::Filter;
 
-pub mod graphql;
+//pub mod graphql;
 
-async fn get_team(id: i32, db: Addr<DbExecutor>) -> Result<Team, InternalError<String>> {
-    let team = db.send(FindTeamById { id }).await;
-
-    match team {
-        Ok(t) => match t {
-            Ok(t) => Ok(t),
-            Err(_err) => Err(InternalError::new(
-                "Database error".to_string(),
-                actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
-            )),
-        },
-        Err(_err) => Err(InternalError::new(
-            "Mailbox error".to_string(),
-            actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
-        )),
-    }
+fn with_logger(logger: Logger) -> impl Filter<Extract = (Logger,), Error = Infallible> + Clone {
+    warp::any().map(move || logger.clone())
 }
 
-async fn get_players(
-    team_id: i32,
-    db: Addr<DbExecutor>,
-) -> Result<Vec<Player>, InternalError<String>> {
-    let players = db.send(FindPlayersByTeamId { team_id }).await;
+fn with_db(
+    db: Arc<Database>,
+) -> impl Filter<Extract = (Arc<Database>,), Error = Infallible> + Clone {
+    warp::any().map(move || db.clone())
+}
 
-    match players {
-        Ok(t) => match t {
-            Ok(players) => Ok(players),
-            Err(_err) => Err(actix_web::error::InternalError::new(
-                "Database error".to_string(),
-                actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
-            )),
-        },
-        Err(_err) => Err(actix_web::error::InternalError::new(
-            "Mailbox error".to_string(),
-            actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
-        )),
-    }
+pub fn router(
+    logger: Logger,
+    db: Arc<Database>,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    let get5_config = warp::path("get5")
+        .and(warp::path("config"))
+        .and(warp::path::param::<i32>())
+        .and(warp::get())
+        .and(warp::path::end())
+        .and(with_logger(logger))
+        .and(with_db(db))
+        .and_then(handler_get5_config);
+
+    let router = get5_config;
+
+    router
 }
 
 fn format_player(player: &Player) -> Option<Get5Player> {
@@ -62,83 +51,57 @@ fn format_player(player: &Player) -> Option<Get5Player> {
     }
 }
 
-pub async fn get5_config(db: web::Data<Addr<DbExecutor>>, req: HttpRequest) -> impl Responder {
-    let id = if let Some(id) = req.match_info().get("id") {
-        id
-    } else {
-        return Err(actix_web::error::InternalError::new(
-            "Missing ID".to_string(),
-            actix_web::http::StatusCode::BAD_REQUEST,
-        ));
+pub async fn handler_get5_config(
+    id: i32,
+    logger: Logger,
+    db: Arc<Database>,
+) -> Result<Box<dyn warp::reply::Reply>, Infallible> {
+    let error_formatter = |err| {
+        let reply = match err {
+            database::Error::DB(err) => match err {
+                Error::NotFound => {
+                    trace!(logger, "Not Found: {}", err);
+                    StatusCode::NOT_FOUND
+                }
+                _ => {
+                    error!(logger, "Database Error: {}", err);
+                    StatusCode::INTERNAL_SERVER_ERROR
+                }
+            },
+            database::Error::Pool(err) => {
+                error!(logger, "Pool Error: {}", err);
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
+        };
+
+        Ok(Box::new(reply) as Box<dyn warp::reply::Reply>)
     };
 
-    let id = if let Ok(id) = id.parse::<i32>() {
-        id
-    } else {
-        return Err(actix_web::error::InternalError::new(
-            "Invalid ID".to_string(),
-            actix_web::http::StatusCode::BAD_REQUEST,
-        ));
-    };
-
-    let r#match = db.send(FindMatchById { id }).await;
+    let r#match = db.find_match_by_id(id);
 
     let r#match = match r#match {
-        Ok(m) => match m {
-            Ok(m) => m,
-            Err(_err) => {
-                return Err(actix_web::error::InternalError::new(
-                    "Database error".to_string(),
-                    actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
-                ))
-            }
-        },
-        Err(_err) => {
-            return Err(actix_web::error::InternalError::new(
-                "Mailbox error".to_string(),
-                actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
-            ))
+        Ok(m) => m,
+        Err(err) => {
+            return error_formatter(err);
         }
     };
 
-    let db = db.get_ref().clone();
-
-    let team1 = match get_team(r#match.team1_id, db.clone()).await {
+    let team1 = match db.find_team_by_id(r#match.team1_id) {
         Ok(team) => team,
-        Err(err) => return Err(err),
+        Err(err) => return error_formatter(err),
     };
-    let team2 = match get_team(r#match.team2_id, db.clone()).await {
+    let team2 = match db.find_team_by_id(r#match.team2_id) {
         Ok(team) => team,
-        Err(err) => return Err(err),
+        Err(err) => return error_formatter(err),
     };
 
-    let team1_players = match get_players(r#match.team1_id, db.clone()).await {
+    let team1_players = match db.get_team_players(r#match.team1_id) {
         Ok(players) => players.iter().filter_map(format_player).collect(),
-        Err(err) => return Err(err),
+        Err(err) => return error_formatter(err),
     };
-    let team2_players = match get_players(r#match.team2_id, db.clone()).await {
+    let team2_players = match db.get_team_players(r#match.team2_id) {
         Ok(players) => players.iter().filter_map(format_player).collect(),
-        Err(err) => return Err(err),
-    };
-
-    let r#match = db.send(FindMatchById { id }).await;
-
-    let r#match = match r#match {
-        Ok(m) => match m {
-            Ok(m) => m,
-            Err(_err) => {
-                return Err(actix_web::error::InternalError::new(
-                    "Database error".to_string(),
-                    actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
-                ))
-            }
-        },
-        Err(_err) => {
-            return Err(actix_web::error::InternalError::new(
-                "Mailbox error".to_string(),
-                actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
-            ))
-        }
+        Err(err) => return error_formatter(err),
     };
 
     let get5_match = Get5Match {
@@ -178,5 +141,5 @@ pub async fn get5_config(db: web::Data<Addr<DbExecutor>>, req: HttpRequest) -> i
         match_title: None,
     };
 
-    Result::Ok(actix_web::web::Json(get5_match))
+    Ok(Box::new(warp::reply::json(&get5_match)) as Box<dyn warp::reply::Reply>)
 }

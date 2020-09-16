@@ -1112,8 +1112,7 @@ mod test {
     use assert_approx_eq::assert_approx_eq;
     use std::fs::File;
     use std::io::{prelude::*, BufReader};
-
-    use actix::clock::Duration;
+    use std::time::Duration;
 
     use crate::csgo::logs::{HitGroup, KillAttributes, LogEntry, LogProcessor, Team, TeamAll};
 
@@ -1135,7 +1134,7 @@ mod test {
         result.unwrap()
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_start() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: Log file started (file "logs/L000_000_000_000_0_202001020304_000.log") (game "/home/steam/csgo/csgo") (version "7713")"#).await;
         if let super::LogEntry::LogFileStart {
@@ -1159,7 +1158,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_closed() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: Log file closed"#).await;
         if let super::LogEntry::LogFileClosed { prefix } = logentry {
@@ -1174,7 +1173,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_world_triggered_event() {
         let logentry =
             parse_line(r#"L 01/02/2020 - 03:04:05: World triggered "Round_Start""#).await;
@@ -1191,7 +1190,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_world_triggered_event_map() {
         let logentry =
             parse_line(r#"L 01/02/2020 - 03:04:05: World triggered "Match_Start" on "de_inferno""#)
@@ -1210,7 +1209,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_world_triggered_event_score() {
         let logentry = parse_line(
             r#"L 01/02/2020 - 03:04:05: World triggered "SFUI_Notice_Round_Draw" (CT "4") (T "0")"#,
@@ -1237,7 +1236,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_triggered_event() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" triggered "Begin_Bomb_Defuse_Without_Kit""#).await;
         if let super::LogEntry::PlayerTriggeredEvent {
@@ -1265,7 +1264,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_team_triggered_event_score() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: Team "TERRORIST" triggered "SFUI_Notice_Target_Bombed" (CT "0") (T "4")"#).await;
         if let super::LogEntry::TeamTriggeredEventScore {
@@ -1291,7 +1290,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_loading_map() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: Loading map "de_dust2""#).await;
         if let super::LogEntry::LoadingMap { prefix, map } = logentry {
@@ -1309,7 +1308,7 @@ mod test {
 
     // TODO LogEntry::CvarDump, this needs a custom test for multiline
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_started_map() {
         let logentry =
             parse_line(r#"L 01/02/2020 - 03:04:05: Started map "de_inferno" (CRC "-1384208105")"#)
@@ -1328,7 +1327,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_cvar() {
         let logentry =
             parse_line(r#"L 01/02/2020 - 03:04:05: server_cvar: "mp_friendlyfire" "0""#).await;
@@ -1346,7 +1345,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_entered_game_player() {
         let logentry = parse_line(
             r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><>" entered the game"#,
@@ -1371,7 +1370,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_entered_game_bot() {
         let logentry =
             parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<2><BOT><>" entered the game"#).await;
@@ -1391,7 +1390,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_get5_event() {
         // the "matchid" field name is supposed to have a GRAVE ACCENT character in it, this is a bug in get5
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: get5_event: {"matchid`":"","params":{"client":"none","map_number":0,"map_name":"de_dust2"},"event":"player_disconnect"}"#).await;
@@ -1411,7 +1410,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_rcon_command() {
         let logentry = parse_line(
             r#"L 01/02/2020 - 03:04:05: rcon from "10.0.0.100:36686": command "status""#,
@@ -1436,7 +1435,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_rcon_bad_password() {
         let logentry =
             parse_line(r#"L 01/02/2020 - 03:04:05: rcon from "10.0.0.100:49904": Bad Password"#)
@@ -1458,7 +1457,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_switched_team() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678>" switched from team <Unassigned> to <TERRORIST>"#).await;
         if let super::LogEntry::SwitchedTeam {
@@ -1488,7 +1487,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_picked_up() {
         let logentry = parse_line(
             r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" picked up "deagle""#,
@@ -1519,7 +1518,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_dropped() {
         let logentry = parse_line(
             r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" dropped "awp""#,
@@ -1550,7 +1549,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_team_playing_not_ready() {
         let logentry =
             parse_line(r#"L 01/02/2020 - 03:04:05: Team playing "CT": [NOT READY] heyo"#).await;
@@ -1575,7 +1574,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_team_playing_ready() {
         let logentry =
             parse_line(r#"L 01/02/2020 - 03:04:05: Team playing "TERRORIST": [READY] heyo"#).await;
@@ -1600,7 +1599,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_team_playing_unspecified() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: Team playing "CT": heyo"#).await;
         if let super::LogEntry::TeamPlaying {
@@ -1624,7 +1623,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_starting_freeze_period() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: Starting Freeze period"#).await;
         if let super::LogEntry::StartingFreezePeriod { prefix } = logentry {
@@ -1639,7 +1638,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_left_buyzone() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" left buyzone with [ weapon_knife weapon_hkp2000 weapon_famas weapon_hegrenade kevlar(100) helmet ]"#).await;
         if let super::LogEntry::PlayerLeftBuyzone {
@@ -1673,7 +1672,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_team_chat() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" say_team "hello world!""#).await;
         if let super::LogEntry::TeamChat {
@@ -1701,7 +1700,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_money_changed() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" money change 12600-1050 = $11550 (tracked) (purchase: weapon_mac10)"#).await;
         if let super::LogEntry::MoneyChanged {
@@ -1739,7 +1738,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_purchased() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" purchased "item_assaultsuit""#).await;
         if let super::LogEntry::PlayerPurchased {
@@ -1767,7 +1766,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_threw_flashbang() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" threw flashbang [-510 2234 -103] flashbang entindex 333)"#).await;
         if let super::LogEntry::ThrewFlashbang {
@@ -1799,7 +1798,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_blinded_player() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" blinded for 0.68 by "bazgaz<10><STEAM_1:1:87654321><TERRORIST>" from flashbang entindex 333 "#).await;
         if let super::LogEntry::BlindedPlayer {
@@ -1837,7 +1836,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_global_chat() {
         let logentry = parse_line(
             r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" say "!ready""#,
@@ -1868,7 +1867,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_killed_entity() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" [-2578 322 461] killed other "func_breakable<440>" [-1706 1406 666] with "ak47" (penetrated)"#).await;
         if let super::LogEntry::PlayerKilledEntity {
@@ -1916,7 +1915,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_killed_player() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" [-2563 -1378 434] killed "bazgaz<10><STEAM_1:1:87654321><TERRORIST>" [-2307 -1025 457] with "glock" (headshot)"#).await;
         if let super::LogEntry::PlayerKilledPlayer {
@@ -1968,7 +1967,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_threw_smokegrenade() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" threw smokegrenade [-300 1480 -123]"#).await;
         if let super::LogEntry::PlayerThrewSmokegrenade {
@@ -1998,7 +1997,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_threw_hegrenade() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" threw hegrenade [671 510 38]"#).await;
         if let super::LogEntry::PlayerThrewHEGrenade {
@@ -2028,7 +2027,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_attacked_player() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" [606 2152 -98] attacked "bazgaz<10><STEAM_1:1:87654321><TERRORIST>" [334 2434 -120] with "ak47" (damage "141") (damage_armor "0") (health "0") (armor "0") (hitgroup "head")"#).await;
         if let super::LogEntry::PlayerAttackedPlayer {
@@ -2082,7 +2081,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_disconnected() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" disconnected (reason "Disconnect")"#).await;
         if let super::LogEntry::PlayerDisconnected {
@@ -2110,7 +2109,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_assisted_killing_player() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" assisted killing "bazgaz<10><STEAM_1:1:87654321><TERRORIST>""#).await;
         if let super::LogEntry::PlayerAssistedKillingPlayer {
@@ -2144,7 +2143,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_assisted_blinding_player() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" flash-assisted killing "bazgaz<10><STEAM_1:1:87654321><TERRORIST>""#).await;
         if let super::LogEntry::PlayerAssistedBlindingPlayer {
@@ -2178,7 +2177,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_spawned_molotov() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: Molotov projectile spawned at 1607.403809 -1526.890625 -341.364044, velocity -812.841064 -28.768530 418.548157"#).await;
         if let super::LogEntry::SpawnedMolotov {
@@ -2208,7 +2207,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_threw_molotov() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" threw molotov [-84 1372 106]"#).await;
         if let super::LogEntry::ThrewMolotov {
@@ -2238,7 +2237,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_player_connected() {
         let logentry = parse_line(
             r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><>" connected, address """#,
@@ -2269,7 +2268,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_validated_steamid() {
         let logentry = parse_line(
             r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><>" STEAM USERID validated"#,
@@ -2294,7 +2293,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_team_scored() {
         let logentry =
             parse_line(r#"L 01/02/2020 - 03:04:05: Team "CT" scored "0" with "5" players"#).await;
@@ -2319,7 +2318,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_threw_decoy() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" threw decoy [-427 1737 -126]"#).await;
         if let super::LogEntry::ThrewDecoy {
@@ -2349,7 +2348,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_match_resumed() {
         let logentry =
             parse_line(r#"L 01/02/2020 - 03:04:05: Match pause is disabled - mp_unpause_match"#)
@@ -2366,7 +2365,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_match_paused() {
         let logentry =
             parse_line(r#"L 01/02/2020 - 03:04:05: Match pause is enabled - mp_pause_match"#).await;
@@ -2382,7 +2381,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_killed_by_bomb() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" [2410 -382 147] was killed by the bomb."#).await;
         if let super::LogEntry::KilledByBomb {
@@ -2412,7 +2411,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_accolade() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: ACCOLADE, FINAL: {assists},    foobar<2>,      VALUE: 3.000000,        POS: 1, SCORE: 0.357143"#).await;
         if let super::LogEntry::Accolade {
@@ -2442,7 +2441,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_game_over() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: Game Over: competitive mg_active de_inferno score 11:16 after 50 min"#).await;
         if let super::LogEntry::GameOver {
@@ -2472,7 +2471,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_changed_nickname() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" changed name to "bazgaz""#).await;
         if let super::LogEntry::ChangedNickname {
@@ -2500,7 +2499,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_committed_suicide() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: "foobar<20><STEAM_1:1:12345678><CT>" [258 2481 -57] committed suicide with "world""#).await;
         if let super::LogEntry::CommittedSuicide {
@@ -2532,7 +2531,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_server_message() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: server_message: "quit""#).await;
         if let super::LogEntry::ServerMessage { prefix, message } = logentry {
@@ -2548,7 +2547,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_steam_auth_failure() {
         let logentry = parse_line(
             r#"L 01/02/2020 - 03:04:05: STEAMAUTH: Client foo bar received failure code 6"#,
@@ -2573,7 +2572,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_meta_mod_plugins_loaded_1() {
         let logentry =
             parse_line(r#"L 01/02/2020 - 03:04:05: [META] Loaded 0 plugins (1 already loaded)"#)
@@ -2597,7 +2596,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn log_meta_mod_plugins_loaded_2() {
         let logentry = parse_line(r#"L 01/02/2020 - 03:04:05: [META] Loaded 1 plugin."#).await;
         if let super::LogEntry::MetaModPluginsLoaded {

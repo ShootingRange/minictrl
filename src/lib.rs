@@ -15,7 +15,6 @@ extern crate lazy_static;
 #[macro_use]
 extern crate async_trait;
 
-pub mod actors;
 pub mod common;
 pub mod csgo;
 pub mod database;

@@ -1,5 +1,5 @@
-use rcon::Connection;
 use get5status::Get5Status;
+use rcon::Connection;
 
 // enum definition: https://github.com/splewis/get5/blob/51fe79d0da8131f7104e4a78551f4364f06be950/scripting/include/get5.inc#L6
 // serialization code: https://github.com/splewis/get5/blob/d5dd9f8fa501261cd2f15067d55b1f7f25e1530b/scripting/get5.sp#L1324
@@ -169,33 +169,28 @@ async fn get5_status(conn: &mut Connection) -> Result<Get5Status, RCONError> {
     let full_resp = conn.cmd("get5_status").await.map_err(RCONError::Conn)?;
 
     // Pick out the relevant line
-    let reply = full_resp
-        .lines()
-        .nth(0)
-        .map_or(
-            // Wrap in a Result so we can throw a error using the `?` operator
-            Result::Err(RCONError::UnexpectedReply),
-            Result::Ok ,
-        )?;
+    let reply = full_resp.lines().nth(0).map_or(
+        // Wrap in a Result so we can throw a error using the `?` operator
+        Result::Err(RCONError::UnexpectedReply),
+        Result::Ok,
+    )?;
 
     if reply == "Unknown command \"get5_status\"" {
         // Get5 is not installed
         return Result::Err(RCONError::UnknownCmd);
     }
 
-    let status: Get5Status = serde_json::from_str(reply).map_err(|err| RCONError::UnexpectedReply)?;
+    let status: Get5Status = serde_json::from_str(reply).map_err(|_| RCONError::UnexpectedReply)?;
 
     Result::Ok(status)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::csgo::rcon::RCONError;
-
     const RCON_ADDRESS: &str = "127.0.0.1:27015";
     const RCON_PASSWORD: &str = "password";
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn get5_status() {
         let mut conn = rcon::Connection::connect(RCON_ADDRESS, RCON_PASSWORD)
             .await
@@ -203,7 +198,7 @@ mod tests {
 
         match super::get5_status(&mut conn).await {
             Ok(reply) => println!("{:?}", reply),
-            Err(err) => assert!(false),
+            Err(_err) => assert!(false),
         };
     }
 }
