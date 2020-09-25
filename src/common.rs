@@ -1,4 +1,4 @@
-#[derive(Clone, Debug, DbEnum, juniper::GraphQLEnum)]
+#[derive(Clone, Debug, DbEnum)]
 #[PgType = "side"]
 #[DieselType = "Side"]
 pub enum SideType {

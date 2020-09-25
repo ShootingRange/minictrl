@@ -11,7 +11,6 @@ dotenv = "0.11.0"
 ipnetwork = ">=0.12.2, <0.17.0" # Must match the version diesel depends on, otherwise the diesel::Expression isn't implemented for ipnetwork::IpNetwork
 serde_json = "^1.0.45"
 serde = { version = "1.0", features = ["derive"] }
-juniper = { git = "https://github.com/graphql-rust/juniper", rev = "547cf3e36fa0532476295186b86954fab3a258f6", features = ["async"] }
 futures = "0.3"
 rcon = "0.2.0"
 regex = "1"

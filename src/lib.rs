@@ -8,7 +8,6 @@ extern crate serde;
 extern crate serde_json;
 #[macro_use]
 extern crate diesel_derive_enum;
-extern crate juniper;
 extern crate regex;
 #[macro_use]
 extern crate lazy_static;

@@ -1,16 +1,8 @@
-use crate::common::SideType;
-use crate::database;
-use crate::database::models::Player;
 use crate::database::Database;
-use crate::get5::basic::{Match as Get5Match, Player as Get5Player, Team as Get5Team};
-use diesel::result::Error;
-use slog::{error, trace, Logger};
+use slog::Logger;
 use std::convert::Infallible;
 use std::sync::Arc;
-use warp::http::StatusCode;
 use warp::Filter;
-
-//pub mod graphql;
 
 fn with_logger(logger: Logger) -> impl Filter<Extract = (Logger,), Error = Infallible> + Clone {
     warp::any().map(move || logger.clone())
@@ -33,7 +25,7 @@ pub fn router(
         .and(warp::path::end())
         .and(with_logger(logger))
         .and(with_db(db))
-        .and_then(handler_get5_config);
+        .and_then(get5::handler_get5_config);
 
     let router = get5_config;
 
