@@ -2,7 +2,7 @@ pub mod models;
 pub mod schema;
 
 use crate::common::SideType;
-use crate::database::models::{Match, Player, Server, Team, CountryCode, MapList};
+use crate::database::models::{CountryCode, MapList, Match, Player, Server, Team};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
@@ -169,7 +169,7 @@ impl Database {
         match dsl::players.filter(dsl::team_id.eq(team_id)).load(&conn) {
             Ok(t) => Ok(Some(t)),
             Err(err) => match err {
-                Error::NotFound => Ok(None),
+                diesel::result::Error::NotFound => Ok(None),
                 _ => Err(Error::DB(err)),
             },
         }
@@ -182,10 +182,10 @@ impl Database {
 
         let conn = self.conn_pool.get().map_err(Error::Pool)?;
 
-        match dsl::servers.filter(dsl::id.eq(server_id)).load(&conn) {
+        match dsl::servers.filter(dsl::id.eq(server_id)).first(&conn) {
             Ok(t) => Ok(Some(t)),
             Err(err) => match err {
-                Error::NotFound => Ok(None),
+                diesel::result::Error::NotFound => Ok(None),
                 _ => Err(Error::DB(err)),
             },
         }
@@ -234,20 +234,31 @@ impl Database {
 
         let conn = self.conn_pool.get().map_err(Error::Pool)?;
 
-        match dsl::teams.filter(dsl::id.eq(team_id)).load(&conn) {
+        match dsl::teams.filter(dsl::id.eq(team_id)).first(&conn) {
             Ok(t) => Ok(Some(t)),
             Err(err) => match err {
-                Error::NotFound => Ok(None),
+                diesel::result::Error::NotFound => Ok(None),
                 _ => Err(Error::DB(err)),
             },
         }
     }
 
-    pub fn create_team(&self, name: String, country: Option<CountryCode>, logo: Option<String>) -> Result<(), Error> {
+    pub fn create_team(
+        &self,
+        name: String,
+        country: Option<CountryCode>,
+        logo: Option<String>,
+    ) -> Result<(), Error> {
         unimplemented!()
     }
 
-    pub fn update_team(&self, team_id: i32, name: String, country: Option<CountryCode>, logo: Option<String>) -> Result<(), Error> {
+    pub fn update_team(
+        &self,
+        team_id: i32,
+        name: String,
+        country: Option<CountryCode>,
+        logo: Option<String>,
+    ) -> Result<(), Error> {
         unimplemented!()
     }
 
@@ -256,11 +267,11 @@ impl Database {
     }
 
     pub fn get_teams(&self) -> Result<Vec<Team>, Error> {
-        use crate::database::schema::servers::dsl;
+        use crate::database::schema::teams::dsl;
 
         let conn = self.conn_pool.get().map_err(Error::Pool)?;
 
-        match dsl::servers.load(&conn) {
+        match dsl::teams.load(&conn) {
             Ok(teams) => Ok(teams),
             Err(err) => Err(Error::DB(err)),
         }
