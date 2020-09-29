@@ -2,7 +2,9 @@ use crate::common::SideType;
 use crate::database;
 use crate::database::models::Player;
 use crate::database::Database;
-use crate::get5::basic::{Match as Get5Match, Player as Get5Player, Team as Get5Team, Spectators as Get5Spectators};
+use crate::get5::basic::{
+    Match as Get5Match, Player as Get5Player, Spectators as Get5Spectators, Team as Get5Team,
+};
 use diesel::result::Error;
 use slog::{error, trace, Logger};
 use std::convert::Infallible;
@@ -52,7 +54,7 @@ pub async fn handler_get5_config(
             None => {
                 return Ok(Box::new(StatusCode::NOT_FOUND) as Box<dyn warp::reply::Reply>);
             }
-            Some(m) => m
+            Some(m) => m,
         },
         Err(err) => {
             return error_formatter(err);
@@ -64,9 +66,11 @@ pub async fn handler_get5_config(
         Ok(team) => match team {
             None => {
                 error!(logger, "match (id={}) referenced team (id={}) in the database, but no such team exists", r#match.id, r#match.team1_id);
-                return Ok(Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>);
+                return Ok(
+                    Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>
+                );
             }
-            Some(team) => team
+            Some(team) => team,
         },
         Err(err) => return error_formatter(err),
     };
@@ -74,9 +78,11 @@ pub async fn handler_get5_config(
         Ok(team) => match team {
             None => {
                 error!(logger, "match (id={}) referenced team (id={}) in the database, but no such team exists", r#match.id, r#match.team2_id);
-                return Ok(Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>);
+                return Ok(
+                    Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>
+                );
             }
-            Some(team) => team
+            Some(team) => team,
         },
         Err(err) => return error_formatter(err),
     };
@@ -86,9 +92,11 @@ pub async fn handler_get5_config(
         Ok(players) => match players {
             None => {
                 error!(logger, "Match (id={}) referenced Team (id={}) in the database, but no such Team exists", r#match.id, r#match.team1_id);
-                return Ok(Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>);
+                return Ok(
+                    Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>
+                );
             }
-            Some(players) => players.iter().filter_map(format_player).collect()
+            Some(players) => players.iter().filter_map(format_player).collect(),
         },
         Err(err) => return error_formatter(err),
     };
@@ -96,9 +104,11 @@ pub async fn handler_get5_config(
         Ok(players) => match players {
             None => {
                 error!(logger, "Match (id={}) referenced Team (id={}) in the database, but no such Team exists", r#match.id, r#match.team2_id);
-                return Ok(Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>);
+                return Ok(
+                    Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>
+                );
             }
-            Some(players) => players.iter().filter_map(format_player).collect()
+            Some(players) => players.iter().filter_map(format_player).collect(),
         },
         Err(err) => return error_formatter(err),
     };
@@ -108,22 +118,23 @@ pub async fn handler_get5_config(
         Ok(spectators) => match spectators {
             None => {
                 error!(logger, "no Match with id {} exists", r#match.id);
-                return Ok(Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>);
+                return Ok(
+                    Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>
+                );
             }
             Some(spectators) => {
                 if !spectators.is_empty() {
                     // Format the spectators SteamID
-                    Some(
-                        Get5Spectators {
-                            name: "Spectators".to_string(),
-                            players: spectators.iter()
-                                .map(|steamid| Get5Player {
-                                    steamID: steamid.clone(),
-                                    name: None
-                                })
-                                .collect(),
-                        }
-                    )
+                    Some(Get5Spectators {
+                        name: "Spectators".to_string(),
+                        players: spectators
+                            .iter()
+                            .map(|steamid| Get5Player {
+                                steamID: steamid.clone(),
+                                name: None,
+                            })
+                            .collect(),
+                    })
                 } else {
                     // Get5 breaks on empty lists so omit the field if there is no spectators
                     None

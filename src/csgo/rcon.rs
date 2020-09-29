@@ -169,7 +169,7 @@ async fn get5_status(conn: &mut Connection) -> Result<Get5Status, RCONError> {
     let full_resp = conn.cmd("get5_status").await.map_err(RCONError::Conn)?;
 
     // Pick out the relevant line
-    let reply = full_resp.lines().nth(0).map_or(
+    let reply = full_resp.lines().next().map_or(
         // Wrap in a Result so we can throw a error using the `?` operator
         Result::Err(RCONError::UnexpectedReply),
         Result::Ok,
@@ -198,7 +198,7 @@ mod tests {
 
         match super::get5_status(&mut conn).await {
             Ok(reply) => println!("{:?}", reply),
-            Err(_err) => assert!(false),
+            Err(_err) => panic!(),
         };
     }
 }

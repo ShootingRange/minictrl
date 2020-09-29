@@ -1,11 +1,11 @@
 extern crate dotenv;
 extern crate minictrl;
 
-use diesel::PgConnection;
-use dotenv::dotenv;
 use diesel::r2d2;
 use diesel::r2d2::event::{AcquireEvent, CheckinEvent, CheckoutEvent, ReleaseEvent, TimeoutEvent};
 use diesel::r2d2::ConnectionManager;
+use diesel::PgConnection;
+use dotenv::dotenv;
 use minictrl::database::Database;
 use slog::{error, trace, Logger};
 use sloggers::terminal::{Destination, TerminalLoggerBuilder};
