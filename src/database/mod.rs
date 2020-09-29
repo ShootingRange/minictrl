@@ -53,37 +53,34 @@ impl Database {
 
         let conn = self.conn_pool.get().map_err(Error::Pool)?;
 
-        conn.build_transaction()
-            .read_write()
-            .run::<_, Error, _>(|| {
+        // Check if the match exists, so we can return None
+        match self.get_match(match_id) {
+            Ok(_) => {}
+            Err(err) => match err {
+                Error::DB(err) => match err {
+                    diesel::result::Error::NotFound => return Ok(None),
+                    _ => return Err(Error::DB(err)),
+                },
+                _ => return Err(err),
+            },
+        }
 
-                // Check if the match exists, so we can return None
-                match self.get_match(match_id) {
-                    Ok(_) => {},
-                    Err(err) => match err {
-                        Error::NotFound => return Ok(None),
-                        _ => return Err(err),
-                    },
-                }
+        // Get maplist records for the given match
+        match dsl::maplist
+            .filter(dsl::match_id.eq(&match_id))
+            .load::<MapList>(&conn)
+        {
+            Ok(mut maps) => {
+                // Sort the map by the order written in the database
+                maps.sort_by_key(|map| map.order);
 
-                // Get maplist records for the given match
-                match dsl::maplist.filter(dsl::match_id.eq(&match_id)).load::<MapList>(&conn) {
-                    Ok(maps) => {
-                        // Sort the map by the order written in the database
-                        maps.sort_by_key(|map| {
-                            map.order
-                        });
+                // Strip record down to the map name
+                let map_names: Vec<String> = maps.iter().map(|map| map.map.to_string()).collect();
 
-                        // Strip record down to the map name
-                        let map_names: Vec<String> = maps.iter()
-                            .map(|map| map.map.to_string())
-                            .collect();
-
-                        Ok(Some(map_names))
-                    },
-                    Err(err) => Err(Error::DB(err)),
-                }
-            })
+                Ok(Some(map_names))
+            }
+            Err(err) => Err(Error::DB(err)),
+        }
     }
 
     pub fn create_match(
