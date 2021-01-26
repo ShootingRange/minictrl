@@ -6,7 +6,7 @@ use crate::database::models::{CountryCode, MapList, Match, Player, Server, Team}
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
-use serde::export::Formatter;
+use std::fmt::Formatter;
 use std::net::IpAddr;
 
 pub struct Database {
