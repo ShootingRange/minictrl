@@ -278,17 +278,10 @@ impl Database {
     }
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum Error {
-    DB(diesel::result::Error),
-    Pool(diesel::r2d2::PoolError),
-}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::DB(err) => write!(f, "Database Error: {}", err),
-            Error::Pool(err) => write!(f, "Pool Error: {}", err),
-        }
-    }
+    #[error("Database error")]
+    DB(#[from] diesel::result::Error),
+    #[error("Database pool error")]
+    Pool(#[from] diesel::r2d2::PoolError),
 }

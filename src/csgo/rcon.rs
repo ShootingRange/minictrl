@@ -155,12 +155,13 @@ pub mod get5status {
     }
 }
 
+#[derive(Error, Debug)]
 enum RCONError {
-    /// Connection error
-    Conn(rcon::Error),
-    /// Could not interpret response
+    #[error("Connection error")]
+    Conn(#[from] rcon::Error),
+    #[error("Could not interpret response")]
     UnexpectedReply,
-    /// Unknown command, it is not supported by the server. Plugin might not be installed or loaded
+    #[error("Unknown command, it is not supported by the server. A plugin might not be installed or loaded")]
     UnknownCmd,
 }
 
@@ -198,7 +199,7 @@ mod tests {
 
         match super::get5_status(&mut conn).await {
             Ok(reply) => println!("{:?}", reply),
-            Err(_err) => panic!(),
+            Err(err) => panic!("{}", err),
         };
     }
 }

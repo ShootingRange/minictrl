@@ -13,6 +13,8 @@ extern crate regex;
 extern crate lazy_static;
 #[macro_use]
 extern crate async_trait;
+#[macro_use]
+extern crate thiserror;
 
 pub mod common;
 pub mod csgo;
