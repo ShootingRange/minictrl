@@ -191,6 +191,7 @@ mod tests {
     const RCON_ADDRESS: &str = "127.0.0.1:27015";
     const RCON_PASSWORD: &str = "password";
 
+    #[ignore]
     #[tokio::test]
     async fn get5_status() {
         let mut conn = rcon::Connection::connect(RCON_ADDRESS, RCON_PASSWORD)
