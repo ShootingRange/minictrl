@@ -6,7 +6,6 @@ use crate::get5::basic::{
     Match as Get5Match, Player as Get5Player, Spectators as Get5Spectators, Team as Get5Team,
 };
 use diesel::result::Error;
-use slog::{error, trace, Logger};
 use std::convert::Infallible;
 use std::sync::Arc;
 use warp::http::StatusCode;
@@ -24,23 +23,22 @@ fn format_player(player: &Player) -> Option<Get5Player> {
 
 pub async fn handler_get5_config(
     id: i32,
-    logger: Logger,
     db: Arc<Database>,
 ) -> Result<Box<dyn warp::reply::Reply>, Infallible> {
     let error_formatter = |err| {
         let reply = match err {
             database::Error::DB(err) => match err {
                 Error::NotFound => {
-                    trace!(logger, "Not Found: {}", err);
+                    trace!("Not Found: {}", err);
                     StatusCode::NOT_FOUND
                 }
                 _ => {
-                    error!(logger, "Database Error: {}", err);
+                    error!("Database Error: {}", err);
                     StatusCode::INTERNAL_SERVER_ERROR
                 }
             },
             database::Error::Pool(err) => {
-                error!(logger, "Pool Error: {}", err);
+                error!("Pool Error: {}", err);
                 StatusCode::INTERNAL_SERVER_ERROR
             }
         };
@@ -65,7 +63,7 @@ pub async fn handler_get5_config(
     let team1 = match db.get_team(r#match.team1_id) {
         Ok(team) => match team {
             None => {
-                error!(logger, "match (id={}) referenced team (id={}) in the database, but no such team exists", r#match.id, r#match.team1_id);
+                error!("match (id={}) referenced team (id={}) in the database, but no such team exists", r#match.id, r#match.team1_id);
                 return Ok(
                     Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>
                 );
@@ -77,7 +75,7 @@ pub async fn handler_get5_config(
     let team2 = match db.get_team(r#match.team2_id) {
         Ok(team) => match team {
             None => {
-                error!(logger, "match (id={}) referenced team (id={}) in the database, but no such team exists", r#match.id, r#match.team2_id);
+                error!("match (id={}) referenced team (id={}) in the database, but no such team exists", r#match.id, r#match.team2_id);
                 return Ok(
                     Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>
                 );
@@ -91,7 +89,7 @@ pub async fn handler_get5_config(
     let team1_players = match db.get_team_players(r#match.team1_id) {
         Ok(players) => match players {
             None => {
-                error!(logger, "Match (id={}) referenced Team (id={}) in the database, but no such Team exists", r#match.id, r#match.team1_id);
+                error!("Match (id={}) referenced Team (id={}) in the database, but no such Team exists", r#match.id, r#match.team1_id);
                 return Ok(
                     Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>
                 );
@@ -103,7 +101,7 @@ pub async fn handler_get5_config(
     let team2_players = match db.get_team_players(r#match.team2_id) {
         Ok(players) => match players {
             None => {
-                error!(logger, "Match (id={}) referenced Team (id={}) in the database, but no such Team exists", r#match.id, r#match.team2_id);
+                error!("Match (id={}) referenced Team (id={}) in the database, but no such Team exists", r#match.id, r#match.team2_id);
                 return Ok(
                     Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>
                 );
@@ -117,7 +115,7 @@ pub async fn handler_get5_config(
     let spectators = match db.get_spectators(r#match.id) {
         Ok(spectators) => match spectators {
             None => {
-                error!(logger, "no Match with id {} exists", r#match.id);
+                error!("no Match with id {} exists", r#match.id);
                 return Ok(
                     Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>
                 );

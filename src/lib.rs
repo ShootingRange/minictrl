@@ -15,6 +15,8 @@ extern crate lazy_static;
 extern crate async_trait;
 #[macro_use]
 extern crate thiserror;
+#[macro_use]
+extern crate tracing;
 
 pub mod common;
 pub mod csgo;
