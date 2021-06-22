@@ -8,3 +8,9 @@ services:
       - POSTGRES_DB=minictrl
     ports:
       - "5432:5432"
+  minictrl:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://minictrl:minictrl@database/minictrl

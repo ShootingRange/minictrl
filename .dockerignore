@@ -1,0 +1,8 @@
+/target
+**/*.rs.bk
+Cargo.lock
+.env
+
+docker-compose.yml
+Dockerfile
+.dockerignore
