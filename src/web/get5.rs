@@ -1,14 +1,15 @@
 use crate::common::SideType;
-use crate::database;
 use crate::database::models::Player;
-use crate::database::Database;
+use crate::database::*;
 use crate::get5::basic::{
     Match as Get5Match, Player as Get5Player, Spectators as Get5Spectators, Team as Get5Team,
 };
-use diesel::result::Error;
-use std::convert::Infallible;
-use std::sync::Arc;
-use warp::http::StatusCode;
+use crate::web::State;
+use sqlx::Acquire;
+use sqlx::Postgres;
+use sqlx::{Connection, PgConnection};
+use tide::{Body, Request, Response, StatusCode};
+use tide_sqlx::SQLxRequestExt;
 
 fn format_player(player: &Player) -> Option<Get5Player> {
     if let Some(steamid) = player.steamid.clone() {
@@ -21,104 +22,103 @@ fn format_player(player: &Player) -> Option<Get5Player> {
     }
 }
 
-pub async fn handler_get5_config(
+#[derive(Deserialize, Debug)]
+struct MatchIdArgs {
     id: i32,
-    db: Arc<Database>,
-) -> Result<Box<dyn warp::reply::Reply>, Infallible> {
-    let error_formatter = |err| {
-        let reply = match err {
-            database::Error::DB(err) => match err {
-                Error::NotFound => {
-                    trace!("Not Found: {}", err);
-                    StatusCode::NOT_FOUND
-                }
-                _ => {
-                    error!("Database Error: {}", err);
-                    StatusCode::INTERNAL_SERVER_ERROR
-                }
-            },
-            database::Error::Pool(err) => {
-                error!("Pool Error: {}", err);
-                StatusCode::INTERNAL_SERVER_ERROR
-            }
-        };
+}
 
-        Ok(Box::new(reply) as Box<dyn warp::reply::Reply>)
-    };
+pub async fn endpoint_get5_config(mut req: tide::Request<State>) -> tide::Result<Response> {
+    let mut pool = req.sqlx_conn::<Postgres>().await;
+    let mut db_conn = pool.acquire().await?;
+
+    let id = req.query::<MatchIdArgs>()?.id;
 
     // Match
-    let r#match = match db.get_match(id) {
+    let r#match = match get_match(&mut db_conn, id) {
         Ok(m) => match m {
             None => {
-                return Ok(Box::new(StatusCode::NOT_FOUND) as Box<dyn warp::reply::Reply>);
+                return tide::Result::Ok(Response::new(StatusCode::NotFound));
             }
             Some(m) => m,
         },
         Err(err) => {
-            return error_formatter(err);
+            return tide::Result::Err(tide::Error::new(StatusCode::InternalServerError, err));
         }
     };
 
     // Teams
-    let team1 = match db.get_team(r#match.team1_id) {
+    let team1 = match get_team(&mut db_conn, r#match.team1_id) {
         Ok(team) => match team {
             None => {
                 error!("match (id={}) referenced team (id={}) in the database, but no such team exists", r#match.id, r#match.team1_id);
-                return Ok(
-                    Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>
-                );
+                return tide::Result::Err(tide::Error::new(
+                    StatusCode::InternalServerError,
+                    anyhow::Error::msg(""),
+                ));
             }
             Some(team) => team,
         },
-        Err(err) => return error_formatter(err),
+        Err(err) => {
+            return tide::Result::Err(tide::Error::new(StatusCode::InternalServerError, err))
+        }
     };
-    let team2 = match db.get_team(r#match.team2_id) {
+    let team2 = match get_team(&mut db_conn, r#match.team2_id) {
         Ok(team) => match team {
             None => {
                 error!("match (id={}) referenced team (id={}) in the database, but no such team exists", r#match.id, r#match.team2_id);
-                return Ok(
-                    Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>
-                );
+                return tide::Result::Err(tide::Error::new(
+                    StatusCode::InternalServerError,
+                    anyhow::Error::msg(""),
+                ));
             }
             Some(team) => team,
         },
-        Err(err) => return error_formatter(err),
+        Err(err) => {
+            return tide::Result::Err(tide::Error::new(StatusCode::InternalServerError, err))
+        }
     };
 
     // Players
-    let team1_players = match db.get_team_players(r#match.team1_id) {
+    let team1_players = match get_team_players(&mut db_conn, r#match.team1_id) {
         Ok(players) => match players {
             None => {
                 error!("Match (id={}) referenced Team (id={}) in the database, but no such Team exists", r#match.id, r#match.team1_id);
-                return Ok(
-                    Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>
-                );
+                return tide::Result::Err(tide::Error::new(
+                    StatusCode::InternalServerError,
+                    anyhow::Error::msg(""),
+                ));
             }
             Some(players) => players.iter().filter_map(format_player).collect(),
         },
-        Err(err) => return error_formatter(err),
+        Err(err) => {
+            return tide::Result::Err(tide::Error::new(StatusCode::InternalServerError, err))
+        }
     };
-    let team2_players = match db.get_team_players(r#match.team2_id) {
+    let team2_players = match get_team_players(&mut db_conn, r#match.team2_id) {
         Ok(players) => match players {
             None => {
                 error!("Match (id={}) referenced Team (id={}) in the database, but no such Team exists", r#match.id, r#match.team2_id);
-                return Ok(
-                    Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>
-                );
+                return tide::Result::Err(tide::Error::new(
+                    StatusCode::InternalServerError,
+                    anyhow::Error::msg(""),
+                ));
             }
             Some(players) => players.iter().filter_map(format_player).collect(),
         },
-        Err(err) => return error_formatter(err),
+        Err(err) => {
+            return tide::Result::Err(tide::Error::new(StatusCode::InternalServerError, err))
+        }
     };
 
     // Spectators
-    let spectators = match db.get_spectators(r#match.id) {
+    let spectators = match get_spectators(&mut db_conn, r#match.id) {
         Ok(spectators) => match spectators {
             None => {
                 error!("no Match with id {} exists", r#match.id);
-                return Ok(
-                    Box::new(StatusCode::INTERNAL_SERVER_ERROR) as Box<dyn warp::reply::Reply>
-                );
+                return tide::Result::Err(tide::Error::new(
+                    StatusCode::InternalServerError,
+                    anyhow::Error::msg(""),
+                ));
             }
             Some(spectators) => {
                 if !spectators.is_empty() {
@@ -139,7 +139,9 @@ pub async fn handler_get5_config(
                 }
             }
         },
-        Err(err) => return error_formatter(err),
+        Err(err) => {
+            return tide::Result::Err(tide::Error::new(StatusCode::InternalServerError, err))
+        }
     };
 
     let get5_match = Get5Match {
@@ -179,5 +181,7 @@ pub async fn handler_get5_config(
         match_title: None,
     };
 
-    Ok(Box::new(warp::reply::json(&get5_match)) as Box<dyn warp::reply::Reply>)
+    let mut resp = Response::new(StatusCode::NotFound);
+    resp.set_body(Body::from_json(&get5_match)?);
+    Ok(resp)
 }

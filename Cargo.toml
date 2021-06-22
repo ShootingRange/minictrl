@@ -5,18 +5,19 @@ authors = ["Jener Rasmussen <jener@jener.dk>"]
 edition = "2018"
 
 [dependencies]
-diesel = { version = "=1.4.5", features = ["postgres", "network-address", "r2d2"] }
-diesel-derive-enum = { version = "0.4.4", features = ["postgres"] }
-dotenv = "0.11.0"
-ipnetwork = ">=0.12.2, <0.17.0" # Must match the version diesel depends on, otherwise the diesel::Expression isn't implemented for ipnetwork::IpNetwork
+tide = "0.16.0"
+tide-sqlx = { version = "0.6.1", features = ["rustls", "postgres"] }
+tide-tracing = "0.0.11"
+async-std = { version = "1.8.0", features = ["attributes"] }
+sqlx = { version = "0.5", features = ["runtime-async-std-rustls", "postgres", "migrate", "ipnetwork", "uuid"] }
+uuid = { version = "*", features = ["v4"] }
 serde_json = "^1.0.45"
 serde = { version = "1.0", features = ["derive"] }
 rcon = "0.2.0"
 regex = "1"
 lazy_static = "1.4.0"
 async-trait = "0.1.40"
-warp = "0.3"
-tokio = { version = "1", features = ["full"] }
+anyhow = "1.0"
 thiserror = "1.0"
 tracing = "^0.1.22"
 tracing-subscriber = "^0.2.15"

@@ -1,6 +1,4 @@
-#[derive(Clone, Debug, DbEnum)]
-#[PgType = "side"]
-#[DieselType = "Side"]
+#[derive(Clone, Debug)]
 pub enum SideType {
     Standard,
     NeverKnife,

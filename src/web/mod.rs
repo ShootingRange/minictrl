@@ -1,26 +1,28 @@
-use std::convert::Infallible;
-use std::sync::Arc;
-use warp::Filter;
+//pub use crate::csgo::receiver::http::handler_log_receiver;
+//pub use crate::get5::handler_get5_config;
+use crate::web::get5::endpoint_get5_config;
+use sqlx::{Pool, Postgres};
+use tide_sqlx::SQLxMiddleware;
+use tide_tracing::TraceMiddleware;
+
+pub type State = ();
 
 mod get5;
 
-fn with_db(
-    db: Arc<Database>,
-) -> impl Filter<Extract = (Arc<Database>,), Error = Infallible> + Clone {
-    warp::any().map(move || db.clone())
-}
+pub async fn webserver_start(db_pool: Pool<Postgres>) -> anyhow::Result<()> {
+    // Setup http server
+    let mut app = tide::new();
+    app.with(SQLxMiddleware::from(db_pool));
+    app.with(TraceMiddleware::new());
 
-pub fn router(db: Arc<Database>) -> BoxedFilter<(impl Reply,)> {
-    let get5_config = warp::path("get5")
-        .and(warp::path("config"))
-        .and(warp::path::param::<i32>())
-        .and(warp::get())
-        .and(warp::path::end())
-        .and(with_db(db))
-        .and_then(get5::handler_get5_config)
-        .boxed();
+    // TODO setup routes
+    app.at("/")
+        .get(|req: tide::Request<()>| async move { Ok("hello world") });
 
-    let router = get5_config;
+    app.at("/api/get5/config").get(endpoint_get5_config);
 
-    router
+    // Start http server
+    app.listen("127.0.0.1:8080").await?;
+
+    Ok(())
 }

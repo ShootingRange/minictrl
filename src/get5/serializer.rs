@@ -1,9 +1,14 @@
 use crate::common::SideType;
 use crate::get5::basic::*;
+use serde::de::{Unexpected, Visitor};
 use serde::ser::*;
-use serde::Serialize;
 use serde::Serializer;
+use serde::{Deserializer, Serialize};
+use sqlx::types::ipnetwork::IpNetwork;
 use std::collections::HashMap;
+use std::fmt::Formatter;
+use std::net::IpAddr;
+use std::str::FromStr;
 
 impl Serialize for Spectators {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
@@ -152,5 +157,49 @@ impl Serialize for SideType {
             SideType::NeverKnife => serializer.serialize_str("never_knife"),
             SideType::AlwaysKnife => serializer.serialize_str("always_knife"),
         }
+    }
+}
+
+pub(crate) fn serialize_ipnetwork<S>(addr: &IpNetwork, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    s.serialize_str(addr.ip().to_string().as_str())
+}
+
+pub(crate) fn deserialize_ipnetwork<'de, D>(d: D) -> Result<IpNetwork, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    d.deserialize_str(IpNetworkVisitor {})
+}
+
+struct IpNetworkVisitor {}
+
+impl<'de> Visitor<'de> for IpNetworkVisitor {
+    type Value = IpNetwork;
+
+    fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+        formatter.write_str("IPv4 or IPv6 address")
+    }
+
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        let addr = IpAddr::from_str(v).map_err(|err| {
+            serde::de::Error::invalid_value(Unexpected::Other(err.to_string().as_str()), &self)
+        })?;
+        Ok(IpNetwork::from(addr))
+    }
+
+    fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        let addr = IpAddr::from_str(v.as_str()).map_err(|err| {
+            serde::de::Error::invalid_value(Unexpected::Other(err.to_string().as_str()), &self)
+        })?;
+        Ok(IpNetwork::from(addr))
     }
 }
