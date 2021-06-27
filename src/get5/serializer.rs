@@ -5,6 +5,7 @@ use serde::ser::*;
 use serde::Serializer;
 use serde::{Deserializer, Serialize};
 use sqlx::types::ipnetwork::IpNetwork;
+use sqlx::types::Uuid;
 use std::collections::HashMap;
 use std::fmt::Formatter;
 use std::net::IpAddr;
@@ -201,5 +202,47 @@ impl<'de> Visitor<'de> for IpNetworkVisitor {
             serde::de::Error::invalid_value(Unexpected::Other(err.to_string().as_str()), &self)
         })?;
         Ok(IpNetwork::from(addr))
+    }
+}
+
+pub(crate) fn serialize_uuid<S>(uuid: &Uuid, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    s.serialize_str(uuid.to_string().as_str())
+}
+
+pub(crate) fn deserialize_uuid<'de, D>(d: D) -> Result<Uuid, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    d.deserialize_str(UuidVisitor {})
+}
+
+struct UuidVisitor {}
+
+impl<'de> Visitor<'de> for UuidVisitor {
+    type Value = Uuid;
+
+    fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+        formatter.write_str("string of hexadecimal digits with optional hyphens")
+    }
+
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        Uuid::parse_str(v).map_err(|err| {
+            serde::de::Error::invalid_value(Unexpected::Other(err.to_string().as_str()), &self)
+        })
+    }
+
+    fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        Uuid::parse_str(v.as_str()).map_err(|err| {
+            serde::de::Error::invalid_value(Unexpected::Other(err.to_string().as_str()), &self)
+        })
     }
 }
