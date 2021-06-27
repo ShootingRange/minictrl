@@ -633,7 +633,7 @@ fn extract_team(captures: &Captures, group: &str) -> Team {
     match team {
         "TERRORIST" => Team::TERRORIST,
         "CT" => Team::CT,
-        _ => panic!(format!("Unexpected Team type ({})", team)),
+        _ => panic!("Unexpected Team type ({})", team),
     }
 }
 
@@ -651,7 +651,7 @@ fn extract_team_all(captures: &Captures, group: &str) -> TeamAll {
         "CT" => TeamAll::CT,
         "Spectator" => TeamAll::SPECTATOR,
         "Console" => TeamAll::CONSOLE,
-        _ => panic!(format!("Unexpected TeamAll type ({})", team)),
+        _ => panic!("Unexpected TeamAll type ({})", team),
     }
 }
 
@@ -672,7 +672,7 @@ fn extract_player_id(captures: &Captures, group: &str) -> PlayerID {
     match team {
         "BOT" => PlayerID::BOT,
         "Console" => PlayerID::CONSOLE,
-        _ => panic!(format!("Unexpected PlayerID type ({})", team)),
+        _ => panic!("Unexpected PlayerID type ({})", team),
     }
 }
 
@@ -721,7 +721,7 @@ fn extract_kill_attributes(captures: &Captures) -> KillAttributes {
             headshot: true,
             penetrated: true,
         },
-        _ => panic!(format!("Unexpected HitGroup type ({})", attributes)),
+        _ => panic!("Unexpected HitGroup type ({})", attributes),
     }
 }
 
@@ -741,7 +741,7 @@ fn extract_hitgroup(captures: &Captures) -> HitGroup {
         "right arm" => HitGroup::RightArm,
         "right leg" => HitGroup::RightLeg,
         "stomach" => HitGroup::Stomach,
-        _ => panic!(format!("Unexpected HitGroup type ({})", hitgroup)),
+        _ => panic!("Unexpected HitGroup type ({})", hitgroup),
     }
 }
 
