@@ -16,7 +16,7 @@ pub(crate) struct QueryRoot;
 
 #[async_graphql::Object]
 impl QueryRoot {
-    async fn team(&self, ctx: &Context<'_>, id: Uuid) -> async_graphql::Result<Option<Team>> {
+    async fn teams(&self, ctx: &Context<'_>, ids: Vec<Uuid>) -> async_graphql::Result<Vec<Team>> {
         /*Ok(ctx
         .data_unchecked::<DataLoader<BookLoader>>()
         .load_one(id)
@@ -24,23 +24,35 @@ impl QueryRoot {
         todo!()
     }
 
-    async fn player(&self, ctx: &Context<'_>, id: Uuid) -> async_graphql::Result<Option<Player>> {
-        todo!()
-    }
-
-    async fn server(&self, ctx: &Context<'_>, id: Uuid) -> async_graphql::Result<Option<Server>> {
-        todo!()
-    }
-
-    async fn spectator(
+    async fn players(
         &self,
         ctx: &Context<'_>,
-        id: Uuid,
-    ) -> async_graphql::Result<Option<Spectator>> {
+        ids: Vec<Uuid>,
+    ) -> async_graphql::Result<Vec<Player>> {
         todo!()
     }
 
-    async fn r#match(&self, ctx: &Context<'_>, id: Uuid) -> async_graphql::Result<Option<r#Match>> {
+    async fn servers(
+        &self,
+        ctx: &Context<'_>,
+        ids: Vec<Uuid>,
+    ) -> async_graphql::Result<Vec<Server>> {
+        todo!()
+    }
+
+    async fn spectators(
+        &self,
+        ctx: &Context<'_>,
+        ids: Vec<Uuid>,
+    ) -> async_graphql::Result<Vec<Spectator>> {
+        todo!()
+    }
+
+    async fn r#match(
+        &self,
+        ctx: &Context<'_>,
+        ids: Vec<Uuid>,
+    ) -> async_graphql::Result<Vec<r#Match>> {
         todo!()
     }
 }
