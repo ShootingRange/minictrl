@@ -1,11 +1,11 @@
 #![allow(dead_code)]
 
 #[macro_use]
-extern crate serde;
+extern crate async_trait;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
-extern crate async_trait;
+extern crate serde;
 #[macro_use]
 extern crate thiserror;
 #[macro_use]

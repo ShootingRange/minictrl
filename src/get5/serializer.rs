@@ -1,15 +1,17 @@
-use crate::common::SideType;
-use crate::get5::basic::*;
+use std::collections::HashMap;
+use std::fmt::Formatter;
+use std::net::IpAddr;
+use std::str::FromStr;
+
 use serde::de::{Unexpected, Visitor};
 use serde::ser::*;
 use serde::Serializer;
 use serde::{Deserializer, Serialize};
 use sqlx::types::ipnetwork::IpNetwork;
 use sqlx::types::Uuid;
-use std::collections::HashMap;
-use std::fmt::Formatter;
-use std::net::IpAddr;
-use std::str::FromStr;
+
+use crate::common::SideType;
+use crate::get5::basic::*;
 
 impl Serialize for Spectators {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>

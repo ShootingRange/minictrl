@@ -1,11 +1,13 @@
-use crate::common::SideType;
-use crate::web::graphql::types::*;
 use async_graphql::dataloader::DataLoader;
 use async_graphql::extensions::Tracing;
-use async_graphql::{Context, EmptyMutation, EmptySubscription, Schema};
-use dataloader::*;
+use async_graphql::{Context, EmptySubscription, Schema};
 use sqlx::types::Uuid;
 use sqlx::{Pool, Postgres};
+
+use dataloader::*;
+
+use crate::common::SideType;
+use crate::web::graphql::types::*;
 
 mod dataloader;
 mod types;

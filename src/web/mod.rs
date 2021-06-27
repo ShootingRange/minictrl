@@ -1,10 +1,11 @@
+use sqlx::{Pool, Postgres};
+use tide_sqlx::SQLxMiddleware;
+use tide_tracing::TraceMiddleware;
+
 //pub use crate::csgo::receiver::http::handler_log_receiver;
 //pub use crate::get5::handler_get5_config;
 use crate::web::get5::endpoint_get5_config;
 use crate::web::graphql::init_schema;
-use sqlx::{Pool, Postgres};
-use tide_sqlx::SQLxMiddleware;
-use tide_tracing::TraceMiddleware;
 
 pub type State = ();
 
@@ -19,7 +20,7 @@ pub async fn webserver_start(db_pool: Pool<Postgres>) -> anyhow::Result<()> {
 
     // TODO setup routes
     app.at("/")
-        .get(|req: tide::Request<()>| async move { Ok("hello world") });
+        .get(|_req: tide::Request<()>| async move { Ok("hello world") });
 
     app.at("/api/get5/config").get(endpoint_get5_config);
 

@@ -1,12 +1,14 @@
-pub mod models;
+use std::net::IpAddr;
 
-use crate::common::SideType;
-use crate::database::models::{CountryCode, MapList, Match, Player, Server, Team};
 use sqlx::migrate::Migrator;
 use sqlx::types::Uuid;
 use sqlx::PgConnection;
-use sqlx::{Connection, Database, Executor, Pool, Postgres};
-use std::net::IpAddr;
+use sqlx::{Pool, Postgres};
+
+use crate::common::SideType;
+use crate::database::models::{CountryCode, MapList, Match, Player, Server, Team};
+
+pub mod models;
 
 static MIGRATOR: Migrator = sqlx::migrate!();
 

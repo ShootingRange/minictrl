@@ -1,9 +1,11 @@
-use crate::database::models::{Match, Team};
+use std::collections::HashMap;
+
 use async_graphql::dataloader::Loader;
 use async_graphql::FieldError;
 use sqlx::types::Uuid;
 use sqlx::{Pool, Postgres};
-use std::collections::HashMap;
+
+use crate::database::models::{Match, Team};
 
 pub struct TeamLoader(Pool<Postgres>);
 

@@ -1,3 +1,8 @@
+use sqlx::Acquire;
+use sqlx::Postgres;
+use tide::{Body, Response, StatusCode};
+use tide_sqlx::SQLxRequestExt;
+
 use crate::common::SideType;
 use crate::database::models::Player;
 use crate::database::*;
@@ -5,11 +10,6 @@ use crate::get5::basic::{
     Match as Get5Match, Player as Get5Player, Spectators as Get5Spectators, Team as Get5Team,
 };
 use crate::web::State;
-use sqlx::Acquire;
-use sqlx::Postgres;
-use sqlx::{Connection, PgConnection};
-use tide::{Body, Request, Response, StatusCode};
-use tide_sqlx::SQLxRequestExt;
 
 fn format_player(player: &Player) -> Option<Get5Player> {
     if let Some(steamid) = player.steamid.clone() {
@@ -27,7 +27,7 @@ struct MatchIdArgs {
     id: i32,
 }
 
-pub async fn endpoint_get5_config(mut req: tide::Request<State>) -> tide::Result<Response> {
+pub async fn endpoint_get5_config(req: tide::Request<State>) -> tide::Result<Response> {
     let mut pool = req.sqlx_conn::<Postgres>().await;
     let mut db_conn = pool.acquire().await?;
 

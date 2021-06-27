@@ -1,5 +1,6 @@
-use crate::common::SideType;
 use std::option::Option;
+
+use crate::common::SideType;
 
 /// Get5 Match schema
 /// https://github.com/splewis/get5#match-schema

@@ -1,6 +1,7 @@
-use crate::common::SideType;
 use async_graphql::SimpleObject;
 use sqlx::types::Uuid;
+
+use crate::common::SideType;
 
 #[derive(SimpleObject)]
 pub struct Team {
