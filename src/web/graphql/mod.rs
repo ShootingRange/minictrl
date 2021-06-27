@@ -14,7 +14,7 @@ pub(crate) struct QueryRoot;
 
 #[async_graphql::Object]
 impl QueryRoot {
-    async fn team(&self, ctx: &Context<'_>, id: String) -> async_graphql::Result<Option<Team>> {
+    async fn team(&self, ctx: &Context<'_>, id: Uuid) -> async_graphql::Result<Option<Team>> {
         /*Ok(ctx
         .data_unchecked::<DataLoader<BookLoader>>()
         .load_one(id)
@@ -22,27 +22,23 @@ impl QueryRoot {
         todo!()
     }
 
-    async fn player(&self, ctx: &Context<'_>, id: String) -> async_graphql::Result<Option<Player>> {
+    async fn player(&self, ctx: &Context<'_>, id: Uuid) -> async_graphql::Result<Option<Player>> {
         todo!()
     }
 
-    async fn server(&self, ctx: &Context<'_>, id: String) -> async_graphql::Result<Option<Server>> {
+    async fn server(&self, ctx: &Context<'_>, id: Uuid) -> async_graphql::Result<Option<Server>> {
         todo!()
     }
 
     async fn spectator(
         &self,
         ctx: &Context<'_>,
-        id: String,
+        id: Uuid,
     ) -> async_graphql::Result<Option<Spectator>> {
         todo!()
     }
 
-    async fn r#match(
-        &self,
-        ctx: &Context<'_>,
-        id: String,
-    ) -> async_graphql::Result<Option<r#Match>> {
+    async fn r#match(&self, ctx: &Context<'_>, id: Uuid) -> async_graphql::Result<Option<r#Match>> {
         todo!()
     }
 }
@@ -77,7 +73,7 @@ impl Mutation {
     async fn add_players(
         &self,
         team: Uuid,
-        players: Vec<String>,
+        players: Vec<Uuid>,
     ) -> async_graphql::Result<Vec<Player>> {
         todo!()
     }
@@ -95,7 +91,7 @@ impl Mutation {
     async fn remove_players(
         &self,
         team: Uuid,
-        players: Vec<String>,
+        players: Vec<Uuid>,
     ) -> async_graphql::Result<Vec<Player>> {
         todo!()
     }
@@ -127,7 +123,7 @@ impl Mutation {
 
     async fn create_match(
         &self,
-        server: Option<Server>,
+        server: Option<Uuid>,
         team1: Uuid,
         team2: Uuid,
         num_maps: i32,
@@ -136,7 +132,7 @@ impl Mutation {
         players_per_team: i32,
         min_player_to_ready: i32,
         maps: Vec<String>,
-        spectators: Vec<Spectator>,
+        spectators: Vec<Uuid>,
     ) -> async_graphql::Result<Server> {
         todo!()
     }
@@ -173,7 +169,7 @@ impl Mutation {
     async fn attach_spectators(
         &self,
         r#match: Uuid,
-        spectator: Vec<String>,
+        spectators: Vec<Uuid>,
     ) -> async_graphql::Result<Vec<bool>> {
         todo!()
     }
@@ -184,7 +180,7 @@ impl Mutation {
     async fn detach_spectators(
         &self,
         r#match: Uuid,
-        spectator: Vec<String>,
+        spectators: Vec<Uuid>,
     ) -> async_graphql::Result<Vec<bool>> {
         todo!()
     }
