@@ -28,14 +28,14 @@ pub struct Player {
         deserialize_with = "deserialize_uuid"
     )]
     pub id: Uuid,
-    pub name: String,
+    pub name: Option<String>,
     #[serde(
         serialize_with = "serialize_uuid",
         deserialize_with = "deserialize_uuid"
     )]
     pub team_id: Uuid,
     pub tag: Option<String>,
-    pub steamid: Option<String>,
+    pub steamid: String,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, sqlx::FromRow)]

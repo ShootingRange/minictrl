@@ -12,14 +12,10 @@ use crate::get5::basic::{
 use crate::web::State;
 
 fn format_player(player: &Player) -> Option<Get5Player> {
-    if let Some(steamid) = player.steamid.clone() {
-        Some(Get5Player {
-            steamID: steamid,
-            name: Some(player.name.clone()), // TODO make player name optional in database
-        })
-    } else {
-        None
-    }
+    Some(Get5Player {
+        steamID: player.steamid.clone(),
+        name: player.name.clone(),
+    })
 }
 
 #[derive(Deserialize, Debug)]
