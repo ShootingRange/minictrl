@@ -15,7 +15,7 @@ pub struct Team {
 #[derive(SimpleObject)]
 pub struct Player {
     pub steamid: String,
-    pub name: String,
+    pub name: Option<String>,
     pub tag: Option<String>,
 }
 

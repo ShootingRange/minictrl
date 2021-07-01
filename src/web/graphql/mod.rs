@@ -17,11 +17,47 @@ pub(crate) struct QueryRoot;
 #[async_graphql::Object]
 impl QueryRoot {
     async fn teams(&self, ctx: &Context<'_>, ids: Vec<Uuid>) -> async_graphql::Result<Vec<Team>> {
-        /*Ok(ctx
-        .data_unchecked::<DataLoader<BookLoader>>()
-        .load_one(id)
-        .await?)*/
-        todo!()
+        let mut teams_raw = ctx
+            .data_unchecked::<DataLoader<TeamLoader>>()
+            .load_many(ids)
+            .await?;
+
+        let team_ids = teams_raw.keys().cloned().collect::<Vec<Uuid>>();
+
+        let mut players_by_team = ctx
+            .data_unchecked::<DataLoader<PlayerTeamLoader>>()
+            .load_many(team_ids)
+            .await?;
+
+        let teams = teams_raw
+            .drain()
+            .map(|(_key, team)| {
+                let players = if ctx.look_ahead().field("players").exists() {
+                    players_by_team
+                        .remove(&team.id)
+                        .expect(format!("missing player for team (id={})", team.id).as_str())
+                        .drain(..)
+                        .map(|player| Player {
+                            steamid: player.steamid,
+                            name: player.name,
+                            tag: player.tag,
+                        })
+                        .collect()
+                } else {
+                    vec![]
+                };
+
+                Team {
+                    id: team.id,
+                    name: team.name,
+                    country: team.country,
+                    logo: team.logo,
+                    players,
+                }
+            })
+            .collect();
+
+        Ok(teams)
     }
 
     async fn players(
@@ -206,6 +242,8 @@ pub(crate) fn init_schema(
     Schema::build(QueryRoot, Mutation, EmptySubscription)
         .data(DataLoader::new(TeamLoader::new(db_pool.clone())))
         .data(DataLoader::new(MatchLoader::new(db_pool.clone())))
+        .data(DataLoader::new(PlayerLoader::new(db_pool.clone())))
+        .data(DataLoader::new(PlayerTeamLoader::new(db_pool.clone())))
         .extension(Tracing)
         .finish()
 }
