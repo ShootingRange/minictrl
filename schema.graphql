@@ -11,7 +11,7 @@ type Match {
     minPlayerToReady: Int!
     numMaps: Int!
     playersPerTeam: Int!
-    server: Server!
+    server: Server
     skipVeto: Boolean!
     spectators: [Spectator!]!
     team1: Team!
@@ -22,48 +22,48 @@ type Match {
 }
 
 type Mutation {
-    addPlayers(players: [String!]!, team: UUID!): [Player!]!
+    addPlayers(players: [UUID!]!, team: UUID!): [Player!]!
     """
 
     Add a spectator to a match
 
     @return: true if the spectator was not already attached to the match
     """
-    attachSpectator(match: UUID!, spectator: String!): Boolean!
-    createMatch(host: String!, port: Int!, rconPassword: String!, type: String): Server!
+    attachSpectators(match: UUID!, spectators: [UUID!]!): [Boolean!]!
+    createMatch(maps: [String!]!, minPlayerToReady: Int!, numMaps: Int!, playersPerTeam: Int!, server: UUID, skipVeto: Boolean!, spectators: [UUID!]!, team1: UUID!, team2: UUID!, vetoFirst: SideType!): Server!
     createServer(host: String!, port: Int!, rconPassword: String!, type: String): Server!
     createSpectator(name: String!, steamid: String!): Spectator!
     createTeam(country: String, logo: String, name: String!): Team!
-    deleteMatch(id: [UUID!]!): Server!
-    deleteServer(id: [UUID!]!): Server!
-    deleteSpectator(steamid: String!): Spectator!
+    deleteMatches(id: [UUID!]!): Server!
+    deleteServers(id: [UUID!]!): Server!
+    deleteSpectators(steamid: [String!]!): Spectator!
     deleteTeams(id: [UUID!]!): Team!
     """
 
-    Removes a spectator to a match
+    Removes a spectator from a match
 
     @return: true if the spectator was not already detached from the match
     """
-    detachSpectator(match: UUID!, spectator: String!): Boolean!
-    removePlayers(players: [String!]!, team: UUID!): [Player!]!
-    updateMatch(host: String!, id: UUID!, port: Int!, rconPassword: String!, type: String): Server!
+    detachSpectators(match: UUID!, spectators: [UUID!]!): [Boolean!]!
+    removePlayers(players: [UUID!]!, team: UUID!): [Player!]!
+    setMapListForMatch(maps: [String!]!, match: UUID!): Boolean!
     updatePlayer(name: String!, steamid: String!, tag: String, team: UUID!): Player!
     updateServer(host: String!, id: UUID!, port: Int!, rconPassword: String!, type: String): Server!
     updateTeam(country: String, id: UUID!, logo: String, name: String!): Team!
 }
 
 type Player {
-    name: String!
+    name: String
     steamid: String!
     tag: String
 }
 
 type QueryRoot {
-    match(id: String!): Match
-    player(id: String!): Player
-    server(id: String!): Server
-    spectator(id: String!): Spectator
-    team(id: String!): Team
+    match(ids: [UUID!]!): [Match!]!
+    players(ids: [UUID!]!): [Player!]!
+    servers(ids: [UUID!]!): [Server!]!
+    spectators(ids: [UUID!]!): [Spectator!]!
+    teams(ids: [UUID!]!): [Team!]!
 }
 
 type Server {
@@ -75,7 +75,7 @@ type Server {
 }
 
 type Spectator {
-    name: String!
+    name: String
     steamid: String!
 }
 
