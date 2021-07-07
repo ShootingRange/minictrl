@@ -1,4 +1,4 @@
-use async_graphql::SimpleObject;
+use async_graphql::{InputObject, SimpleObject};
 use sqlx::types::Uuid;
 
 use crate::common::SideType;
@@ -22,6 +22,14 @@ pub struct Player {
 #[derive(SimpleObject)]
 pub struct Server {
     pub id: Uuid,
+    pub host: String,
+    pub port: i32,
+    pub r#type: Option<String>,
+    pub rcon_password: String,
+}
+
+#[derive(InputObject)]
+pub struct ServerInput {
     pub host: String,
     pub port: i32,
     pub r#type: Option<String>,

@@ -146,13 +146,7 @@ impl Mutation {
         todo!()
     }
 
-    async fn create_server(
-        &self,
-        host: String,
-        port: i32,
-        r#type: Option<String>,
-        rcon_password: String,
-    ) -> async_graphql::Result<Server> {
+    async fn create_server(&self, server: ServerInput) -> async_graphql::Result<Server> {
         todo!()
     }
 

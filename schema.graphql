@@ -1,7 +1,7 @@
 # This file was generated based on ".graphqlconfig". Do not edit manually.
 
 schema {
-    query: QueryRoot
+    query: Query
     mutation: Mutation
 }
 
@@ -31,7 +31,7 @@ type Mutation {
     """
     attachSpectators(match: UUID!, spectators: [UUID!]!): [Boolean!]!
     createMatch(maps: [String!]!, minPlayerToReady: Int!, numMaps: Int!, playersPerTeam: Int!, server: UUID, skipVeto: Boolean!, spectators: [UUID!]!, team1: UUID!, team2: UUID!, vetoFirst: SideType!): Server!
-    createServer(host: String!, port: Int!, rconPassword: String!, type: String): Server!
+    createServer(server: ServerInput!): Server!
     createSpectator(name: String!, steamid: String!): Spectator!
     createTeam(country: String, logo: String, name: String!): Team!
     deleteMatches(id: [UUID!]!): Server!
@@ -58,7 +58,7 @@ type Player {
     tag: String
 }
 
-type QueryRoot {
+type Query {
     match(ids: [UUID!]!): [Match!]!
     players(ids: [UUID!]!): [Player!]!
     servers(ids: [UUID!]!): [Server!]!
@@ -91,6 +91,13 @@ enum SideType {
     always_knife
     never_knife
     standard
+}
+
+input ServerInput {
+    host: String!
+    port: Int!
+    rconPassword: String!
+    type: String
 }
 
 
