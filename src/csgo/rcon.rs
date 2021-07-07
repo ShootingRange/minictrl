@@ -192,7 +192,7 @@ mod tests {
     const RCON_PASSWORD: &str = "password";
 
     #[ignore]
-    #[tokio::test]
+    #[async_std::test]
     async fn get5_status() {
         let mut conn = rcon::Connection::connect(RCON_ADDRESS, RCON_PASSWORD)
             .await
