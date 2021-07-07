@@ -1,3 +1,4 @@
+use crate::common::generate_password;
 use get5status::Get5Status;
 use rcon::Connection;
 
@@ -163,6 +164,8 @@ enum RCONError {
     UnexpectedReply,
     #[error("Unknown command, it is not supported by the server. A plugin might not be installed or loaded")]
     UnknownCmd,
+    #[error("Something unexpected happened")]
+    Other(anyhow::Error),
 }
 
 async fn get5_status(conn: &mut Connection) -> Result<Get5Status, RCONError> {
@@ -184,6 +187,25 @@ async fn get5_status(conn: &mut Connection) -> Result<Get5Status, RCONError> {
     let status: Get5Status = serde_json::from_str(reply).map_err(|_| RCONError::UnexpectedReply)?;
 
     Result::Ok(status)
+}
+
+/// Sets the password required from a player before the can login to the CS:GO server
+async fn set_player_password(password: &str, conn: &mut Connection) -> Result<(), RCONError> {
+    // Send command to CS:GO server
+    // Note: The server gives a empty reply on success
+    conn.cmd(format!("sv_password \"{}\"", password).as_str())
+        .await
+        .map_err(RCONError::Conn)?;
+
+    Ok(())
+}
+
+/// Sets the password required from a player before the can login to the CS:GO server to a random value
+async fn scramble_player_password(conn: &mut Connection) -> Result<String, RCONError> {
+    let password = generate_password().map_err(RCONError::Other)?;
+    set_player_password(password.as_str(), conn).await?;
+
+    Ok(password)
 }
 
 #[cfg(test)]
