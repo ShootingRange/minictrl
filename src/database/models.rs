@@ -51,7 +51,7 @@ pub struct Server {
     )]
     pub host: IpNetwork,
     pub port: i32,
-    pub type_: Option<String>,
+    pub r#type: Option<String>,
     pub password: String,
 }
 
