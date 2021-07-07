@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Jener Rasmussen <jener@jener.dk>"]
 edition = "2018"
 
+[features]
+test_live_rcon = []
+
 [dependencies]
 tide = "0.16.0"
 tide-sqlx = { version = "0.6.1", features = ["rustls", "postgres"] }
