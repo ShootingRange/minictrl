@@ -22,8 +22,10 @@ pub async fn webserver_start(db_pool: Pool<Postgres>) -> anyhow::Result<()> {
     app.at("/")
         .get(|_req: tide::Request<()>| async move { Ok("hello world") });
 
+    // Get5 configuration files
     app.at("/api/get5/config").get(endpoint_get5_config);
 
+    // GraphQL endpoint
     let schema = init_schema(db_pool.clone());
     app.at("/api/graphql")
         .post(async_graphql_tide::endpoint(schema));
