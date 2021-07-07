@@ -10,6 +10,7 @@ use crate::get5::basic::{
     Match as Get5Match, Player as Get5Player, Spectators as Get5Spectators, Team as Get5Team,
 };
 use crate::web::State;
+use uuid::Uuid;
 
 fn format_player(player: &Player) -> Option<Get5Player> {
     Some(Get5Player {
@@ -20,7 +21,7 @@ fn format_player(player: &Player) -> Option<Get5Player> {
 
 #[derive(Deserialize, Debug)]
 struct MatchIdArgs {
-    id: i32,
+    id: Uuid,
 }
 
 pub async fn endpoint_get5_config(req: tide::Request<State>) -> tide::Result<Response> {
@@ -30,7 +31,7 @@ pub async fn endpoint_get5_config(req: tide::Request<State>) -> tide::Result<Res
     let id = req.query::<MatchIdArgs>()?.id;
 
     // Match
-    let r#match = match get_match(&mut db_conn, id) {
+    let r#match = match get_match(&mut db_conn, id).await {
         Ok(m) => match m {
             None => {
                 return tide::Result::Ok(Response::new(StatusCode::NotFound));
@@ -43,7 +44,7 @@ pub async fn endpoint_get5_config(req: tide::Request<State>) -> tide::Result<Res
     };
 
     // Teams
-    let team1 = match get_team(&mut db_conn, r#match.team1_id) {
+    let team1 = match get_team(&mut db_conn, r#match.team1_id).await {
         Ok(team) => match team {
             None => {
                 error!("match (id={}) referenced team (id={}) in the database, but no such team exists", r#match.id, r#match.team1_id);
@@ -58,7 +59,7 @@ pub async fn endpoint_get5_config(req: tide::Request<State>) -> tide::Result<Res
             return tide::Result::Err(tide::Error::new(StatusCode::InternalServerError, err))
         }
     };
-    let team2 = match get_team(&mut db_conn, r#match.team2_id) {
+    let team2 = match get_team(&mut db_conn, r#match.team2_id).await {
         Ok(team) => match team {
             None => {
                 error!("match (id={}) referenced team (id={}) in the database, but no such team exists", r#match.id, r#match.team2_id);
@@ -75,7 +76,7 @@ pub async fn endpoint_get5_config(req: tide::Request<State>) -> tide::Result<Res
     };
 
     // Players
-    let team1_players = match get_team_players(&mut db_conn, r#match.team1_id) {
+    let team1_players = match get_team_players(&mut db_conn, r#match.team1_id).await {
         Ok(players) => match players {
             None => {
                 error!("Match (id={}) referenced Team (id={}) in the database, but no such Team exists", r#match.id, r#match.team1_id);
@@ -90,7 +91,7 @@ pub async fn endpoint_get5_config(req: tide::Request<State>) -> tide::Result<Res
             return tide::Result::Err(tide::Error::new(StatusCode::InternalServerError, err))
         }
     };
-    let team2_players = match get_team_players(&mut db_conn, r#match.team2_id) {
+    let team2_players = match get_team_players(&mut db_conn, r#match.team2_id).await {
         Ok(players) => match players {
             None => {
                 error!("Match (id={}) referenced Team (id={}) in the database, but no such Team exists", r#match.id, r#match.team2_id);
@@ -107,7 +108,7 @@ pub async fn endpoint_get5_config(req: tide::Request<State>) -> tide::Result<Res
     };
 
     // Spectators
-    let spectators = match get_spectators(&mut db_conn, r#match.id) {
+    let spectators = match get_spectators(&mut db_conn, r#match.id).await {
         Ok(spectators) => match spectators {
             None => {
                 error!("no Match with id {} exists", r#match.id);
@@ -177,7 +178,7 @@ pub async fn endpoint_get5_config(req: tide::Request<State>) -> tide::Result<Res
         match_title: None,
     };
 
-    let mut resp = Response::new(StatusCode::NotFound);
+    let mut resp = Response::new(StatusCode::Ok);
     resp.set_body(Body::from_json(&get5_match)?);
     Ok(resp)
 }

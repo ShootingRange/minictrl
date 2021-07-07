@@ -6,7 +6,7 @@ use sqlx::PgConnection;
 use sqlx::{Pool, Postgres};
 
 use crate::common::SideType;
-use crate::database::models::{CountryCode, MapList, Match, Player, Server, Team};
+use crate::database::models::{CountryCode, MapList, Match, Player, Server, Spectator, Team};
 
 pub mod models;
 
@@ -47,8 +47,22 @@ pub fn create_match(
     todo!()
 }
 
-pub fn get_match(db: &mut PgConnection, match_id: i32) -> Result<Option<Match>, Error> {
-    todo!()
+pub async fn get_match(db: &mut PgConnection, match_id: Uuid) -> Result<Option<Match>, Error> {
+    let query: sqlx::Result<Match> = sqlx::query_as!(
+        Match,
+        "SELECT id, server_id, team1_id, team2_id, team1_score, team2_score, num_maps, skip_veto, veto_first AS \"veto_first: SideType\", players_per_team, min_player_to_ready FROM matches WHERE id = $1",
+        match_id
+    )
+    .fetch_one(db)
+    .await;
+
+    match query {
+        Ok(matsh) => Ok(Some(matsh)),
+        Err(err) => match err {
+            sqlx::Error::RowNotFound => Ok(None),
+            _ => Err(err.into()),
+        },
+    }
 }
 
 pub fn update_match(
@@ -113,11 +127,22 @@ pub fn update_player(db: &mut PgConnection, player_id: Uuid) -> Result<(), Error
     todo!()
 }
 
-pub fn get_team_players(
+pub async fn get_team_players(
     db: &mut PgConnection,
     team_id: Uuid,
 ) -> Result<Option<Vec<Player>>, Error> {
-    todo!()
+    let query: sqlx::Result<Vec<Player>> =
+        sqlx::query_as!(Player, "SELECT * FROM players WHERE team_id = $1", team_id)
+            .fetch_all(db)
+            .await;
+
+    match query {
+        Ok(players) => Ok(Some(players)),
+        Err(err) => match err {
+            sqlx::Error::RowNotFound => Ok(None),
+            _ => Err(err.into()),
+        },
+    }
 }
 
 // Server
@@ -171,14 +196,42 @@ pub fn remove_spectators(
     todo!()
 }
 
-pub fn get_spectators(db: &mut PgConnection, match_id: Uuid) -> Result<Option<Vec<String>>, Error> {
-    todo!()
+pub async fn get_spectators(
+    db: &mut PgConnection,
+    match_id: Uuid,
+) -> Result<Option<Vec<String>>, Error> {
+    let query: sqlx::Result<Vec<Spectator>> =
+        sqlx::query_as!(Spectator, "SELECT * FROM spectators WHERE id IN (SELECT spectator_id FROM match_spectator WHERE match_id = $1)", match_id)
+            .fetch_all(db)
+            .await;
+
+    match query {
+        Ok(mut rows) => {
+            let steamids = rows.drain(..).map(|row| row.steamid).collect();
+            Ok(Some(steamids))
+        }
+        Err(err) => match err {
+            sqlx::Error::RowNotFound => Ok(None),
+            _ => Err(err.into()),
+        },
+    }
 }
 
 // Team
 
-pub fn get_team(db: &mut PgConnection, team_id: Uuid) -> Result<Option<Team>, Error> {
-    todo!()
+pub async fn get_team(db: &mut PgConnection, team_id: Uuid) -> Result<Option<Team>, Error> {
+    let query: sqlx::Result<Team> =
+        sqlx::query_as!(Team, "SELECT * FROM teams WHERE id = $1", team_id)
+            .fetch_one(db)
+            .await;
+
+    match query {
+        Ok(team) => Ok(Some(team)),
+        Err(err) => match err {
+            sqlx::Error::RowNotFound => Ok(None),
+            _ => Err(err.into()),
+        },
+    }
 }
 
 pub fn create_team(
@@ -210,5 +263,6 @@ pub fn get_teams(db: &mut PgConnection) -> Result<Vec<Team>, Error> {
 
 #[derive(Error, Debug)]
 pub enum Error {
-    // TODO
+    #[error("An error occurred in the underlying database driver")]
+    DatabaseError(#[from] sqlx::Error),
 }
