@@ -2,6 +2,11 @@ use crate::common::generate_password;
 use get5status::Get5Status;
 use rcon::Connection;
 
+// NOTE: If the value of the CVAR start with a double quote, everything following it will be
+// assumed to be part of the value, except the last character if it a double quote.
+// If the value is not started with a double quote, you can chain commands/CVARs together with
+// a semicolon as separator
+
 // enum definition: https://github.com/splewis/get5/blob/51fe79d0da8131f7104e4a78551f4364f06be950/scripting/include/get5.inc#L6
 // serialization code: https://github.com/splewis/get5/blob/d5dd9f8fa501261cd2f15067d55b1f7f25e1530b/scripting/get5.sp#L1324
 // TODO maps: json object, key "map%d", value: map name, https://github.com/splewis/get5/blob/51fe79d0da8131f7104e4a78551f4364f06be950/scripting/get5.sp#L1357
