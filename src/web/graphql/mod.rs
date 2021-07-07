@@ -12,10 +12,10 @@ use crate::web::graphql::types::*;
 mod dataloader;
 mod types;
 
-pub(crate) struct QueryRoot;
+pub(crate) struct Query;
 
 #[async_graphql::Object]
-impl QueryRoot {
+impl Query {
     async fn teams(&self, ctx: &Context<'_>, ids: Vec<Uuid>) -> async_graphql::Result<Vec<Team>> {
         let mut teams_raw = ctx
             .data_unchecked::<DataLoader<TeamLoader>>()
@@ -236,10 +236,8 @@ impl Mutation {
     }
 }
 
-pub(crate) fn init_schema(
-    db_pool: Pool<Postgres>,
-) -> Schema<QueryRoot, Mutation, EmptySubscription> {
-    Schema::build(QueryRoot, Mutation, EmptySubscription)
+pub(crate) fn init_schema(db_pool: Pool<Postgres>) -> Schema<Query, Mutation, EmptySubscription> {
+    Schema::build(Query, Mutation, EmptySubscription)
         .data(DataLoader::new(TeamLoader::new(db_pool.clone())))
         .data(DataLoader::new(MatchLoader::new(db_pool.clone())))
         .data(DataLoader::new(PlayerLoader::new(db_pool.clone())))
