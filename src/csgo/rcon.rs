@@ -227,7 +227,7 @@ mod tests {
 
         match super::get5_status(&mut conn).await {
             Ok(reply) => println!("{:?}", reply),
-            Err(err) => panic!("{}", err),
+            Err(err) => panic!("{:?}", err),
         };
     }
 }
