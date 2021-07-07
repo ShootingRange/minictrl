@@ -2,6 +2,7 @@ use async_graphql::{InputObject, SimpleObject};
 use sqlx::types::Uuid;
 
 use crate::common::SideType;
+use crate::database;
 
 #[derive(SimpleObject)]
 pub struct Team {
@@ -26,6 +27,18 @@ pub struct Server {
     pub port: i32,
     pub r#type: Option<String>,
     pub rcon_password: String,
+}
+
+impl From<crate::database::models::Server> for Server {
+    fn from(server: database::models::Server) -> Self {
+        Server {
+            id: server.id,
+            host: server.host.ip().to_string(),
+            port: server.port,
+            rcon_password: server.password,
+            r#type: server.r#type,
+        }
+    }
 }
 
 #[derive(InputObject)]

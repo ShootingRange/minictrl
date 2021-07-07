@@ -7,7 +7,11 @@ use sqlx::{Pool, Postgres};
 use dataloader::*;
 
 use crate::common::SideType;
+use crate::database::models as db_models;
 use crate::web::graphql::types::*;
+use anyhow::anyhow;
+use sqlx::types::ipnetwork::IpNetwork;
+use std::str::FromStr;
 
 mod dataloader;
 mod types;
@@ -146,8 +150,41 @@ impl Mutation {
         todo!()
     }
 
-    async fn create_server(&self, server: ServerInput) -> async_graphql::Result<Server> {
-        todo!()
+    async fn create_server(
+        &self,
+        ctx: &Context<'_>,
+        server: ServerInput,
+    ) -> async_graphql::Result<Server> {
+        // Check host
+        let host = match IpNetwork::from_str(server.host.as_str()) {
+            Ok(host) => host,
+            Err(err) => {
+                if cfg!(debug_assertions) {
+                    Err(anyhow!(err))
+                } else {
+                    Err(anyhow!("Invalid host"))
+                }?
+            }
+        };
+
+        // check port
+        if server.port <= 0 || server.port >= 65536 {
+            return Err(anyhow!("Port must be between 0 and 65536").into());
+        }
+
+        let mut conn = ctx.data_unchecked::<Pool<Postgres>>();
+        let new_server: db_models::Server = sqlx::query_as!(
+            db_models::Server,
+            "INSERT INTO servers (host, port, type, password) VALUES ($1, $2, $3, $4) RETURNING *",
+            host,
+            server.port,
+            server.r#type,
+            server.rcon_password
+        )
+        .fetch_one(conn)
+        .await?;
+
+        Ok(new_server.into())
     }
 
     async fn update_server(
@@ -236,6 +273,7 @@ pub(crate) fn init_schema(db_pool: Pool<Postgres>) -> Schema<Query, Mutation, Em
         .data(DataLoader::new(MatchLoader::new(db_pool.clone())))
         .data(DataLoader::new(PlayerLoader::new(db_pool.clone())))
         .data(DataLoader::new(PlayerTeamLoader::new(db_pool.clone())))
+        .data(db_pool)
         .extension(Tracing)
         .finish()
 }
