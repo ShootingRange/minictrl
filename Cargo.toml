@@ -5,6 +5,8 @@ authors = ["Jener Rasmussen <jener@jener.dk>"]
 edition = "2018"
 
 [features]
+default = []
+ci = ["default"]
 test_live_rcon = []
 
 [dependencies]

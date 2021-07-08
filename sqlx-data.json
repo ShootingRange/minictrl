@@ -1,0 +1,249 @@
+{
+  "db": "PostgreSQL",
+  "191602a99ef6ba1e84c0a2bc110dad1549c5602488bc4605d56b849567dcb373": {
+    "query": "SELECT * FROM players WHERE team_id = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "team_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "tag",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "steamid",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        true,
+        false,
+        true,
+        false
+      ]
+    }
+  },
+  "469547c4b67d6a9337d4254f9bc0160a804bea870c932285b793d3aac8f1eeac": {
+    "query": "SELECT id, server_id, team1_id, team2_id, team1_score, team2_score, num_maps, skip_veto, veto_first AS \"veto_first: SideType\", players_per_team, min_player_to_ready FROM matches WHERE id = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "server_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "team1_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "team2_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 4,
+          "name": "team1_score",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 5,
+          "name": "team2_score",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 6,
+          "name": "num_maps",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 7,
+          "name": "skip_veto",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 8,
+          "name": "veto_first: SideType",
+          "type_info": {
+            "Custom": {
+              "name": "side",
+              "kind": {
+                "Enum": [
+                  "standard",
+                  "never_knife",
+                  "always_knife"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ordinal": 9,
+          "name": "players_per_team",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 10,
+          "name": "min_player_to_ready",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "677e970856c92c01594f75d97b60d74781acc379462d3c747eb2158b33e594be": {
+    "query": "SELECT * FROM teams WHERE id = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "country",
+          "type_info": "Bpchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "logo",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true,
+        true
+      ]
+    }
+  },
+  "74843051b445ce881a19d4b630c6bf0087c3041409597e4fbec5684e8ea02236": {
+    "query": "INSERT INTO servers (host, port, type, password) VALUES ($1, $2, $3, $4) RETURNING *",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "host",
+          "type_info": "Inet"
+        },
+        {
+          "ordinal": 2,
+          "name": "port",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 3,
+          "name": "type",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "password",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Inet",
+          "Int4",
+          "Varchar",
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        true,
+        false
+      ]
+    }
+  },
+  "d3ec18bdfaf04c232203875e12b07478d67901d5250558e247596c8c2c42a1ba": {
+    "query": "SELECT * FROM spectators WHERE id IN (SELECT spectator_id FROM match_spectator WHERE match_id = $1)",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "steamid",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false
+      ]
+    }
+  }
+}
