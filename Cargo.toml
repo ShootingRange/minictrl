@@ -18,7 +18,7 @@ sqlx = { version = "0.5", features = ["runtime-async-std-rustls", "postgres", "m
 uuid = { version = "*", features = ["v4"] }
 serde_json = "^1.0.45"
 serde = { version = "1.0", features = ["derive"] }
-rcon = "0.2.0"
+rcon = "0.5.1"
 regex = "1"
 lazy_static = "1.4.0"
 async-trait = "0.1.40"
